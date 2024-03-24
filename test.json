@@ -1,0 +1,9 @@
+{
+    "Conv2D": {
+        "filters": 20,
+        "kernel_size": 5,
+        "padding": "same",
+        "use_bias": true,
+        "activation": "leaky_relu"
+    }
+}

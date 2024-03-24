@@ -1,0 +1,98 @@
+{
+    "model": {
+        "name": "Image_Compressor",
+        "layers": {
+            "input": {
+                "Input": {
+                    "shape": [28,28,1]
+                }
+            },
+            "encoder": [
+                {
+                    "Conv2D": {
+                        "filters": 20,
+                        "kernel_size": 5,
+                        "strides": 2,
+                        "padding": "same",
+                        "use_bias": true,
+                        "activation": "leaky_relu",
+                        "name": "encoder_layer_1"
+                    }
+                },
+                {
+                    "Conv2D": {
+                        "filters": 50,
+                        "kernel_size": 5,
+                        "strides": 2,
+                        "padding": "same",
+                        "use_bias": true,
+                        "activation": "leaky_relu",
+                        "name": "encoder_layer_2"
+                    }
+                },
+                {
+                    "Flatten": {"name": "encoder_layer_3"}
+                },
+                {
+                    "Dense": {
+                        "units": 500,
+                        "activation": "leaky_relu",
+                        "name": "encoder_layer_4"
+                    }
+                }
+
+            ],
+            "latent": {
+                "Dense": {
+                    "units": null,
+                    "activation": null,
+                    "name": "compressed_representation"
+                }
+            },
+            "decoder": [
+                {
+                    "Dense": {
+                        "units": 500,
+                        "activation": "leaky_relu",
+                        "name": "decoder_layer_1"
+                    }
+                },
+                {
+                    "Dense": {
+                        "units": 2450,
+                        "activation": "leaky_relu",
+                        "name": "decoder_layer_2"
+                    }
+                },
+                {
+                    "Reshape": {
+                        "target_shape": [7,7,50],
+                        "name": "decoder_layer_3"
+                    }
+                },
+                {
+                    "Conv2DTranspose": {
+                        "filters": 20,
+                        "kernel_size": 5,
+                        "padding": "same",
+                        "use_bias": true,
+                        "strides": 2,
+                        "activation": "leaky_relu",
+                        "name": "decoder_layer_4"
+                    }
+                },
+                {
+                    "Conv2DTranspose": {
+                        "filters": 1,
+                        "kernel_size": 5,
+                        "padding": "same",
+                        "use_bias": true,
+                        "strides": 2,
+                        "activation": "leaky_relu",
+                        "name": "decoder_layer_5"
+                    }
+                }
+            ]
+        }
+    }
+}
