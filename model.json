@@ -2,97 +2,152 @@
     "model": {
         "name": "Image_Compressor",
         "layers": {
-            "input": {
+            "inputs": [{
                 "Input": {
-                    "shape": [28,28,1]
+                    "shape": [28,28,1],
+                    "name": "Input_Layer"
                 }
-            },
-            "encoder": [
-                {
-                    "Conv2D": {
-                        "filters": 20,
-                        "kernel_size": 5,
-                        "strides": 2,
-                        "padding": "same",
-                        "use_bias": true,
-                        "activation": "leaky_relu",
-                        "name": "encoder_layer_1"
+            }],
+            "generator": {
+                "name": "Generator",
+                "layers": {
+                "encoder": {
+                    "name": "Encoder",                    
+                    "layers": [
+                    {
+                        "Conv2D": {
+                            "filters": 20,
+                            "kernel_size": 5,
+                            "strides": 2,
+                            "padding": "same",
+                            "use_bias": true,
+                            "activation": "leaky_relu",
+                            "name": "encoder_layer_1"
+                        }
+                    },
+                    {
+                        "Conv2D": {
+                            "filters": 50,
+                            "kernel_size": 5,
+                            "strides": 2,
+                            "padding": "same",
+                            "use_bias": true,
+                            "activation": "leaky_relu",
+                            "name": "encoder_layer_2"
+                        }
+                    },
+                    {
+                        "Flatten": {"name": "encoder_layer_3"}
+                    },
+                    {
+                        "Dense": {
+                            "units": 500,
+                            "activation": "leaky_relu",
+                            "name": "encoder_layer_4"
+                        }
+                    },
+                    {
+                        "Dense": {
+                            "units": null,
+                            "activation": null,
+                            "name": "compressed_representation"
+                        }
                     }
-                },
-                {
-                    "Conv2D": {
-                        "filters": 50,
-                        "kernel_size": 5,
-                        "strides": 2,
-                        "padding": "same",
-                        "use_bias": true,
-                        "activation": "leaky_relu",
-                        "name": "encoder_layer_2"
-                    }
-                },
-                {
-                    "Flatten": {"name": "encoder_layer_3"}
-                },
-                {
-                    "Dense": {
-                        "units": 500,
-                        "activation": "leaky_relu",
-                        "name": "encoder_layer_4"
-                    }
-                }
 
-            ],
-            "latent": {
-                "Dense": {
-                    "units": null,
-                    "activation": null,
-                    "name": "compressed_representation"
-                }
-            },
-            "decoder": [
-                {
-                    "Dense": {
-                        "units": 500,
-                        "activation": "leaky_relu",
-                        "name": "decoder_layer_1"
+                ]},
+                "decoder": {
+                    "name": "Decoder",
+                    "layers":[
+                    {
+                        "Dense": {
+                            "units": 500,
+                            "activation": "leaky_relu",
+                            "name": "decoder_layer_1"
+                        }
+                    },
+                    {
+                        "Dense": {
+                            "units": 2450,
+                            "activation": "leaky_relu",
+                            "name": "decoder_layer_2"
+                        }
+                    },
+                    {
+                        "Reshape": {
+                            "target_shape": [7,7,50],
+                            "name": "decoder_layer_3"
+                        }
+                    },
+                    {
+                        "Conv2DTranspose": {
+                            "filters": 20,
+                            "kernel_size": 5,
+                            "padding": "same",
+                            "use_bias": true,
+                            "strides": 2,
+                            "activation": "leaky_relu",
+                            "name": "decoder_layer_4"
+                        }
+                    },
+                    {
+                        "Conv2DTranspose": {
+                            "filters": 1,
+                            "kernel_size": 5,
+                            "padding": "same",
+                            "use_bias": true,
+                            "strides": 2,
+                            "activation": "leaky_relu",
+                            "name": "decoder_layer_5"
+                        }
                     }
-                },
-                {
-                    "Dense": {
-                        "units": 2450,
-                        "activation": "leaky_relu",
-                        "name": "decoder_layer_2"
+                ]}
+            }
+        },
+
+            "discriminator": {
+                "name": "Discriminator",
+                "layers": [
+                    {
+                        "Conv2D": {
+                            "filters": 20,
+                            "kernel_size": 5,
+                            "strides": 2,
+                            "padding": "valid",
+                            "use_bias": true,
+                            "activation": "relu",
+                            "name": "discriminator_layer_1"
+                        }
+                    },
+                    {
+                        "Conv2D": {
+                            "filters": 50,
+                            "kernel_size": 5,
+                            "strides": 2,
+                            "padding": "valid",
+                            "use_bias": true,
+                            "activation": "relu",
+                            "name": "discriminator_layer_2"
+                        }
+                    },
+                    {
+                        "Flatten": {}
+                    },
+                    {
+                        "Dense": {
+                            "units": 500,
+                            "activation": "relu",
+                            "name": "discriminator_layer_4"
+                        }
+                    },
+                    {
+                        "Dense": {
+                            "units": 1,
+                            "activation": "sigmoid",
+                            "name": "discriminator_output"
+                        }
                     }
-                },
-                {
-                    "Reshape": {
-                        "target_shape": [7,7,50],
-                        "name": "decoder_layer_3"
-                    }
-                },
-                {
-                    "Conv2DTranspose": {
-                        "filters": 20,
-                        "kernel_size": 5,
-                        "padding": "same",
-                        "use_bias": true,
-                        "strides": 2,
-                        "activation": "leaky_relu",
-                        "name": "decoder_layer_4"
-                    }
-                },
-                {
-                    "Conv2DTranspose": {
-                        "filters": 1,
-                        "kernel_size": 5,
-                        "padding": "same",
-                        "use_bias": true,
-                        "strides": 2,
-                        "activation": "leaky_relu",
-                        "name": "decoder_layer_5"
-                    }
-                }
-            ]
+                ]
+            }
         }
     }
 }
