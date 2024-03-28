@@ -14,6 +14,7 @@ class EncoderModel(tf.keras.Model):
         x = tf.reshape(x,self.input_shape)
         for layer in self.layers:
             x = layer(x)
+            changes
             
         
         
