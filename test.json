@@ -1,9 +1,28 @@
 {
-    "Conv2D": {
-        "filters": 20,
-        "kernel_size": 5,
-        "padding": "same",
-        "use_bias": true,
-        "activation": "leaky_relu"
+    "model": {
+        "name": "Model",
+        "layers": [
+        {
+            "Conv2D": {
+                "filters": 20,
+                "kernel_size": 5,
+                "padding": "same",
+                "use_bias": true,
+                "activation": "leaky_relu"
+            }
+        },
+        {
+            "Dense": {
+                "units": 20,
+                "activation": "relu"
+            }
+        },
+        {
+            "Flatten": {}
+        },
+        {
+            "Reshape": {"target_shape": [2,3,4]}
+        }
+        ]
     }
 }
