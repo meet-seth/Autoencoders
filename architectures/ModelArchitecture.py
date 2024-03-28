@@ -1,18 +1,24 @@
 import tensorflow as tf
 import tensorflow_compression as tfc
-
+import constants as const
 class ImageCompressor(tf.keras.Model):
     def __init__(self, latent_dims,config,*args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(ImageCompressor,self).__init__(*args, **kwargs)
         self.config = config
         self._name = self.config['model']['name']
         for sub_model, value in self.config['model'].items():
             if sub_model =='inputs':
-                self.inputs = value
+                self.inputs_layer = value
             elif sub_model == 'generator':
-                self.generator = Generator(latent_dims,value,tuple([-1]+list(self.inputs.shape[1:])))
+                self.generator = Generator(latent_dims,value,tuple([-1]+list(self.inputs_layer.shape[1:])))
             elif sub_model == 'discriminator':
-                self.discriminator = Discriminator(value,tuple([-1]+list(self.inputs.shape[1:])))
+                self.discriminator = Discriminator(value,tuple([-1]+list(self.inputs_layer.shape[1:])))               
+        
+        self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
+        self.discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
+        
+    def build(self):
+        
                 
     def call(self,x,training):
         
@@ -20,10 +26,49 @@ class ImageCompressor(tf.keras.Model):
         discriminator_preds_original = self.discriminator(x,True)
         discriminator_preds_fake = self.discriminator(regenerated_output,False)
         
-        return {"regen_out": regenerated_output, 
-                "fake_preds": discriminator_preds_fake, 
-                "real_preds": discriminator_preds_original,
-                "rate": rate}
+        return {
+            "rate": rate,
+            "generator": {
+                "image": regenerated_output,
+                "fake_out": discriminator_preds_fake
+            },
+            "discriminator": {
+                "real_out": discriminator_preds_original,
+                "fake_out": discriminator_preds_fake
+            }
+        }
+        
+    
+    @tf.function
+    def train_step(self,x):
+        
+        with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+            predictions = self(x,training=True)
+            
+            true_tensor = {
+                "rate": tf.ones_like(predictions['rate']),
+                "generator": {
+                    "image": x,
+                    "fake_out": tf.ones_like(predictions['generator']['fake_out'])
+                },
+                "discriminator": {
+                    "real_out": tf.ones_like(predictions['discriminator']['real_out']),
+                    "fake_out": tf.zeros_like(predictions['discriminator']['fake_out'])
+                }
+            }
+            print(predictions)
+            
+            loss = self.compute_loss(true_tensor,predictions)
+            
+        generator_gradients = gen_tape.gradient(loss['generator'],self.generator.trainable_variables)
+        discriminator_gradients = disc_tape.gradient(loss['discriminator'],self.discriminator.trainable_variables)
+        
+        self.generator_optimizer.apply_gradients(zip(generator_gradients,self.generator.trainable_variables))
+        self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients,self.discriminator.trainable_variables))
+        
+        return {"generator_loss": loss['generator'],
+                "discriminator_loss": loss['discriminator'],
+                'rate': loss['rate']}
     
 class Generator(tf.keras.Model):
     def __init__(self,latent_dims,config, input_shape, *args, **kwargs):
