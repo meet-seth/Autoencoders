@@ -1,35 +1,101 @@
 import json
 import tensorflow as tf
 import tensorflow_compression as tfc
-
-class EncoderModel(tf.keras.Model):
-    def __init__(self,layers,input_shape,latent_dims,training=True,name='Encoder',**kwargs):
-        super().__init__(**kwargs)
-        self.latent_dims = latent_dims
-        self.name = name
-        self.layers = layers
-        self.input_shape = input_shape
-    def call(self,x):
-        x = tf.cast(x,self.compute_dtype) / 255.
-        x = tf.reshape(x,self.input_shape)
-        for layer in self.layers:
-            x = layer(x)
-            changes
-            
-        
-        
-        compressed = 
+from architectures.ModelArchitecture import ImageCompressor
 class ModelBuilder:
     
     def __init__(self,model_path):
         
+        """
+        Build a tf.keras.Model from config.json file
+        """
+        
         with open(model_path,'r') as f:
-            self.model_config = json.load(f)['model']
+            self.model_config = json.load(f)
             f.close()
         
     def build(self,latent_dims):
-        model_name = self.model_config['name']
-        model_layers = self.model_config['layers']
+        """
+        Starts the model building process. Is called from main.py
+
+        Args:
+            latent_dims (int): Number of units in compressed_representation layer
+
+        Returns:
+            dict: dictionary with model specifications
+        """
+        self.latent_dims = latent_dims
+        model_conf = self.build_model_from_json(self.model_config)
         
+        model = ImageCompressor(latent_dims,model_conf)
+        return model
+       
         
+    def build_model_from_json(self,config):
+        """
+        Recursive function that reads json file and accordingly creates either
+        a Sequential model or adds the sequential model to dictionary to be further 
+        used by tf.keras.Model Functional API
+
+        Args:
+            config (dict): Configuration dictionary as read from json
+
+        Returns:
+            dict: Dictionary containing tf.keras.Sequential model or layers for
+            further use by the tf.keras.Model functional API
+        """
+        model = {}
+        for name, conf in config.items():
+            
+            if name=='inputs':
+                model[name] = self.make_sequential_model(conf,name,inputs=True)
+            elif isinstance(conf['layers'],list):
+                model[name] = self.make_sequential_model(conf['layers'],name)
+            else:
+                model[name] = self.build_model_from_json(conf['layers'])
+                model[name]['name'] = conf['name']
+                
+        return model
+    
+    def make_sequential_model(self,layers,name,inputs=False):
+        """
+        Generates Sequential Model from the dictionary containing layer specifications
+
+        Args:
+            layers (dict): List of Dictionary of Layers
+            name (str): name of the model to which the layers belong to
+            inputs (bool, optional): Wheather the layers are Input layers or not
+            to be processed differently. Defaults to False.
+
+        Returns:
+            Either returns a tensorflow layer or tensorflow keras model.    
+        """
         
+        if not inputs:
+            model = tf.keras.Sequential(name=name)
+            
+        for layer in layers:
+            for layer_name, args in layer.items():
+                if 'name' in args.keys():
+                    if args['name'] == 'compressed_representation':
+                        args['units'] = self.latent_dims
+                
+                tf_layer = self.get_tf_layer(layer_name,**args)
+                
+                if not inputs:
+                    model.add(tf_layer)
+                else:
+                    return tf_layer
+        return model
+                
+    def get_tf_layer(self,layer_name,**kwargs):
+        """
+        Get tf.keras.layer by passing in layer_name in string 
+
+        Args:
+            layer_name (str): Type of Layer, Conv2D, Dense, Flatten, etc.
+
+        Returns:
+            tf.keras.Layer: A tensorflow layer
+        """
+        return getattr(tf.keras.layers,layer_name)(**kwargs)
