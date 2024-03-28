@@ -7,15 +7,15 @@ class DatasetBuilder:
         self.dataset_name = dataset_name
         self.dataset = dict()
         
+    def mapper(self,data):
+        return data['image']
+        
     def build(self):
         if self.is_tfds:
             
             if self.dataset_name=='mnist':
                 
-                self.dataset['train'], \
-                self.dataset['valid'], \
-                self.dataset['test'], \
-                self.dataset['info'] = tfds.load(
+                ds, info= tfds.load(
                     self.dataset_name,
                     split=[
                         'train[:80%]',
@@ -27,12 +27,14 @@ class DatasetBuilder:
                     with_info=True
                 )
                 
+                self.dataset['train'] = ds[0].map(self.mapper)
+                self.dataset['val'] = ds[1].map(self.mapper)
+                self.dataset['test'] = ds[2].map(self.mapper)
+                self.dataset['info'] = info
+                
             elif self.dataset_name=='eurosat':
                 
-                self.dataset['train'], \
-                self.dataset['valid'], \
-                self.dataset['test'], \
-                self.dataset['info'] = tfds.load(
+                ds, info = tfds.load(
                     self.dataset_name,
                     split=[
                         'train[:80%]',
@@ -41,7 +43,13 @@ class DatasetBuilder:
                     ],
                     with_info=True
                 )
+                self.dataset['train'] = ds[0].map(self.mapper)
+                self.dataset['valid'] = ds[1].map(self.mapper)
+                self.dataset['test'] = ds[2].map(self.mapper)
+                self.dataset['info'] = info
         
         else:
             assert "Not Implemented for reading directory dataset"
             pass
+        
+        return self.dataset
