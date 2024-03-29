@@ -25,7 +25,7 @@ class Process:
         
         const.LEARNING_RATE = learning_rate        
         if model.endswith('.json'):
-            self.model = ModelBuilder(model).build(latent_dims)
+            self.model = ModelBuilder(model).build(latent_dims,log_dir)
         else:
             self.model = tf.keras.models.load_model(model)
         self.mode = mode
@@ -120,18 +120,7 @@ if __name__ == "__main__":
     parser.add_argument # Add Verbosity Argument
     
     args = parser.parse_args()
-    #     [
-    #         'mode',
-    #         'model',
-    #         'tfds',
-    #         'dataset',
-    #         '--',
-    #         'log_dir',
-    #         'batch_size',
-    #         'learning_rate',
-    #         'latent_dims'
-    #     ]
-    # )
+    
     process = Process(**vars(args))
     
     process.start()
