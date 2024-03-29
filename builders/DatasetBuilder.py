@@ -18,8 +18,8 @@ class DatasetBuilder:
                 ds, info= tfds.load(
                     self.dataset_name,
                     split=[
-                        'train[:5%]',
-                        'train[5%:7%]',
+                        'train[:80%]',
+                        'train[80%:90%]',
                         'test'
                     ],
                     shuffle_files=True,
