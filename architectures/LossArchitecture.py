@@ -1,9 +1,19 @@
+from keras.src.utils.losses_utils import ReductionV2
 import tensorflow as tf
 import constants as const
 
 class RateLoss(tf.keras.losses.Loss):
     def call(self,y_true,y_pred):
         return y_pred
+    
+class PSNRLoss(tf.keras.losses.Loss):
+    
+    @tf.function
+    def call(self,y_true,y_pred):
+        mse = tf.keras.losses.mean_squared_error(y_true,y_pred)
+        psnr = tf.math.log(10.) / (-10. * tf.math.log(mse))
+        
+        return psnr
     
 class GeneratorLoss(tf.keras.losses.Loss):
     def __init__(self, reduction='auto',name=None):

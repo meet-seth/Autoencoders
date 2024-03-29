@@ -12,25 +12,39 @@ class Trainer:
         self.epochs = epochs
         
     def train(self):
-        self.model.compile(
-            loss = {
-                'rate': RateLoss(),
-                'generator': GeneratorLoss(),
-                'discriminator': DiscriminatorLoss()
-            },
-            metrics=['distortion','fooling_loss']
-        )
+        if const.DISCRIMINATOR:
+            self.model.compile(
+                loss = {
+                    'rate': RateLoss(),
+                    'generator': GeneratorLoss(),
+                    'discriminator': DiscriminatorLoss()
+                }
+            )
+            
+            
         
+        else:
+            self.model.compile(
+                loss = {
+                    'rate': RateLoss(),
+                    'generator': PSNRLoss()
+                },
+                loss_weights={
+                    'rate': 1.,
+                    'generator': 100
+                }
+            )
+            
         self.history = self.model.fit(
-            self.dataset['train'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
-            validation_data = self.dataset['val'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
-            epochs = self.epochs,
-            callbacks = [tf.keras.callbacks.TensorBoard(
-                log_dir=self.log_dir,
-                write_graph=True,
-                write_images=True
-            )]
-        )
+                self.dataset['train'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
+                validation_data = self.dataset['val'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
+                epochs = self.epochs,
+                callbacks = [tf.keras.callbacks.TensorBoard(
+                    log_dir=self.log_dir,
+                    write_graph=True,
+                    write_images=True
+                )]
+            )
         
         return self.model,self.history
         
