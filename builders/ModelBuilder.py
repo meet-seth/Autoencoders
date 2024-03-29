@@ -1,7 +1,7 @@
 import json
 import tensorflow as tf
 import tensorflow_compression as tfc
-from architectures.ModelArchitecture import ImageCompressor
+from architectures.ModelArchitecture import ImageCompressor, Generator, Discriminator
 class ModelBuilder:
     
     def __init__(self,model_path):
@@ -14,7 +14,7 @@ class ModelBuilder:
             self.model_config = json.load(f)
             f.close()
         
-    def build(self,latent_dims):
+    def build(self,latent_dims,log_dir):
         """
         Starts the model building process. Is called from main.py
 
@@ -26,10 +26,38 @@ class ModelBuilder:
         """
         self.latent_dims = latent_dims
         model_conf = self.build_model_from_json(self.model_config)
-        
-        model = ImageCompressor(latent_dims,model_conf)
+        inputs,outputs, generator, discriminator = self.generate_outputs(model_conf)
+        model = ImageCompressor(inputs=inputs,outputs=outputs,generator=generator,discriminator=discriminator,log_dir=log_dir)
+        print(model.summary())
         return model
        
+    def generate_outputs(self,model_conf):
+        name = model_conf['model']['name']
+        for sub_model, value in model_conf['model'].items():
+            if sub_model =='inputs':
+                inputs_layer = value
+            elif sub_model == 'generator':
+                generator = Generator(self.latent_dims,value,inputs_layer.shape[1:],name=name)
+            elif sub_model == 'discriminator':
+                discriminator = Discriminator(value,inputs_layer.shape[1:],name=name)
+                
+        regenerated_output,rate = generator(inputs_layer,training=False)
+        discriminator_preds_original = discriminator(inputs_layer,True)
+        discriminator_preds_fake = discriminator(regenerated_output,False)
+        
+        outputs_dict = {
+            "rate": rate,
+            "generator": {
+                "image": regenerated_output,
+                "fake_out": discriminator_preds_fake
+            },
+            "discriminator": {
+                "real_out": discriminator_preds_original,
+                "fake_out": discriminator_preds_fake
+            }
+        }
+        
+        return inputs_layer, outputs_dict, generator, discriminator
         
     def build_model_from_json(self,config):
         """
@@ -79,7 +107,6 @@ class ModelBuilder:
                 if 'name' in args.keys():
                     if args['name'] == 'compressed_representation':
                         args['units'] = self.latent_dims
-                
                 tf_layer = self.get_tf_layer(layer_name,**args)
                 
                 if not inputs:
