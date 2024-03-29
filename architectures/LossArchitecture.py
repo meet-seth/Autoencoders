@@ -10,7 +10,7 @@ class PSNRLoss(tf.keras.losses.Loss):
     
     @tf.function
     def call(self,y_true,y_pred):
-        mse = tf.keras.losses.mean_squared_error(y_true,y_pred)
+        mse = tf.keras.losses.mean_squared_error(y_true,y_pred) + .00001
         psnr = tf.math.log(10.) / (-10. * tf.math.log(mse))
         
         return psnr
