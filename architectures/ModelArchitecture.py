@@ -74,6 +74,9 @@ class ImageCompressor(tf.keras.Model):
     @tf.function
     def test_step(self,x):
         
+        
+        
+        predictions = self(x,training=False)
         true_tensor = {
                 "rate": tf.ones_like(predictions['rate']),
                 "generator": {
@@ -85,8 +88,6 @@ class ImageCompressor(tf.keras.Model):
                     "fake_out": tf.zeros_like(predictions['discriminator']['fake_out'])
                 }
             }
-        
-        predictions = self(x,training=False)
         loss = {}
         loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
         loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
