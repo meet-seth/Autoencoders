@@ -17,14 +17,19 @@ class Trainer:
                 'rate': RateLoss(),
                 'generator': GeneratorLoss(),
                 'discriminator': DiscriminatorLoss()
-            }
+            },
+            metrics=['distortion','fooling_loss']
         )
         
         self.history = self.model.fit(
             self.dataset['train'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
             validation_data = self.dataset['val'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
             epochs = self.epochs,
-            callbacks = const.CALLBACKS
+            callbacks = [tf.keras.callbacks.TensorBoard(
+                log_dir=self.log_dir,
+                write_graph=True,
+                write_images=True
+            )]
         )
         
         return self.model,self.history
