@@ -1,4 +1,5 @@
 import tensorflow_datasets as tfds
+import constants as const
 
 class DatasetBuilder:
     
@@ -31,6 +32,7 @@ class DatasetBuilder:
                 self.dataset['val'] = ds[1].map(self.mapper)
                 self.dataset['test'] = ds[2].map(self.mapper)
                 self.dataset['info'] = info
+                const.CHANNELS = 1
                 
             elif self.dataset_name=='eurosat':
                 
@@ -47,6 +49,8 @@ class DatasetBuilder:
                 self.dataset['valid'] = ds[1].map(self.mapper)
                 self.dataset['test'] = ds[2].map(self.mapper)
                 self.dataset['info'] = info
+                
+                const.CHANNELS=3
         
         else:
             assert "Not Implemented for reading directory dataset"

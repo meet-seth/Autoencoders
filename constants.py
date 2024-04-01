@@ -7,3 +7,4 @@ GENERATOR_WEIGHTS = {
     'distortion': 2000.,
     'discriminator': 100
 }
+CHANNELS=3
