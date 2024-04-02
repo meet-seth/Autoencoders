@@ -8,3 +8,4 @@ GENERATOR_WEIGHTS = {
     'discriminator': 100
 }
 CHANNELS=3
+TO_DELETE = None
