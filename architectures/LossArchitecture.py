@@ -10,12 +10,13 @@ class RateLoss(tf.keras.losses.Loss):
 class SSIMLoss(tf.keras.losses.Loss):
     def __init__(self, window_size=11,strides=[1,1,1,1],padding='SAME',reduction="auto", name=None):
         super().__init__(reduction, name)
-        self.window_size=11
+        self.weight = const.SSIM_WEIGHT
+        self.window_size=window_size
         self.strides=strides
         self.padding=padding
         self.gaussian_kernel = self.make_gaussian_kernel(
             self.window_size,
-            const.CHANNEL,
+            const.CHANNELS,
             sigma=const.SSIM_SIGMA
         )
         self.C1 = tf.constant(0.01 ** 2)
@@ -52,7 +53,7 @@ class SSIMLoss(tf.keras.losses.Loss):
         )
         
         mu_1_squared = tf.math.square(mu_1)
-        mu_2_squared = tf.math.sqaure(mu_2)
+        mu_2_squared = tf.math.square(mu_2)
         mu_1_2 = tf.math.multiply(mu_1,mu_2)
         
         x_1 = tf.nn.conv2d(
@@ -66,7 +67,7 @@ class SSIMLoss(tf.keras.losses.Loss):
         )
         
         x_2 = tf.nn.conv2d(
-            tf.math.sqaure(y_pred),
+            tf.math.square(y_pred),
             self.gaussian_kernel,
             padding=self.padding,
             strides=self.strides
@@ -85,6 +86,21 @@ class SSIMLoss(tf.keras.losses.Loss):
         sigma_1_2 = tf.math.subtract(
             x_1_2, mu_1_2
         )
+        
+        numerator_1 = tf.math.add(tf.math.scalar_mul(self.M,mu_1_2),self.C1)
+        numerator_2 = tf.math.add(tf.math.scalar_mul(self.M,sigma_1_2),self.C2)
+        
+        denominator_1 = tf.math.add(tf.math.add(mu_1_squared,mu_2_squared),self.C1)
+        denominator_2 = tf.math.add(tf.math.add(sigma_1_sqaured,sigma_2_squared),self.C2)
+        
+        ssim_score = tf.math.reduce_mean(
+            tf.math.divide(
+                tf.math.multiply(numerator_1,numerator_2),
+                tf.math.multiply(denominator_1,denominator_2)
+            )
+        )
+        
+        return self.weight*ssim_score
         
         
 

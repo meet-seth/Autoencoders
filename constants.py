@@ -8,3 +8,5 @@ GENERATOR_WEIGHTS = {
     'discriminator': 100
 }
 CHANNELS=3
+SSIM_SIGMA = 1.5
+SSIM_WEIGHT = 2000

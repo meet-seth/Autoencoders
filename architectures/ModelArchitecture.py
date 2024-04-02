@@ -6,151 +6,26 @@ class ImageCompressor(tf.keras.Model):
         super().__init__(*args,inputs=inputs,outputs=outputs,**kwargs)
         self.tf_writer = tf.summary.create_file_writer(log_dir)
         self.generator = generator
+        self.discriminator = discriminator
         self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
-        self.use_discriminator = const.DISCRIMINATOR
-        if self.use_discriminator:
-            self.discriminator = discriminator
-            self.discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
-        
-    @tf.function    
+
+           
     def call(self,x,training):
         
         regenerated_output,rate = self.generator(x,training=training)
         
-        if self.use_discriminator:      
-            
-            discriminator_preds_original = self.discriminator(x,True)
-            discriminator_preds_fake = self.discriminator(regenerated_output,False)
-            
-            return {
-                "rate": rate,
-                "generator": {
-                    "image": regenerated_output,
-                    "fake_out": discriminator_preds_fake
-                },
-                "discriminator": {
-                    "real_out": discriminator_preds_original,
-                    "fake_out": discriminator_preds_fake
-                }
-            }
-        else:
-            return {
-                "rate": rate,
-                "generator": regenerated_output
-            }
+        return {
+            "rate": rate,
+            "generator": regenerated_output
+        }
         
     
     @tf.function
     def train_step(self,x):
         
-        if const.DISCRIMINATOR:        
-            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-                predictions = self(x,training=True)
-                
-                true_tensor = {
-                    "rate": tf.ones_like(predictions['rate']),
-                    "generator": {
-                        "image": tf.cast(x,self.compute_dtype) / 255.,
-                        "fake_out": tf.ones_like(predictions['generator']['fake_out'])
-                    },
-                    "discriminator": {
-                        "real_out": tf.ones_like(predictions['discriminator']['real_out']),
-                        "fake_out": tf.zeros_like(predictions['discriminator']['fake_out'])
-                    }
-                }
-                loss = {}
-                loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
-                loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
-                loss['discriminator_loss'] = self.loss['discriminator'](true_tensor['discriminator'],predictions['discriminator'])
-                
-            with self.tf_writer.as_default(step=self._train_counter):
-                tf.summary.scalar("rate",loss['rate'])
-                tf.summary.scalar("generator",loss['generator_loss'])
-                tf.summary.scalar("discriminator",loss["discriminator_loss"])
-                tf.summary.image("original",x)
-                tf.summary.image("regenerated",tf.cast(predictions['generator']['image']*255.,tf.uint8))
-                
-            generator_gradients = gen_tape.gradient(loss['generator_loss'],self.generator.trainable_variables)
-            discriminator_gradients = disc_tape.gradient(loss['discriminator_loss'],self.discriminator.trainable_variables)
-            
-            self.generator_optimizer.apply_gradients(zip(generator_gradients,self.generator.trainable_variables))
-            self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients,self.discriminator.trainable_variables))
-            
-            for metric in self.metrics:
-                metric.update_state(loss[metric.name])
-            
-            return {"generator_loss": loss['generator_loss'],
-                    "discriminator_loss": loss['discriminator_loss'],
-                    'rate': loss['rate']}
-        else:
-            with tf.GradientTape() as gen_tape:
-                predictions = self(x,training=True)
-                true_tensor = {
-                    "rate": tf.ones_like(predictions['rate']),
-                    "generator": tf.cast(x,self.compute_dtype) / 255.
-                }
-                loss = {}
-                loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
-                loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
-                
-            
-            with self.tf_writer.as_default(step=self._train_counter):
-                tf.summary.scalar("rate",loss['rate'])
-                tf.summary.scalar("generator",loss['generator_loss'])
-                tf.summary.image("original",x)
-                tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
-            
-            generator_gradients = gen_tape.gradient(loss['generator_loss'],self.generator.trainable_variables)
-            self.generator_optimizer.apply_gradients(zip(generator_gradients,self.generator.trainable_variables))
-            
-            for metric in self.metrics:
-                metric.update_state(loss[metric.name])
-            
-            return {
-                "rate": loss['rate'],
-                "generator_loss": loss['generator_loss'] 
-            }
-                
-        
-    @tf.function
-    def test_step(self,x):
-        
-        
-        if self.use_discriminator:
-            predictions = self(x,training=False)
-            true_tensor = {
-                    "rate": tf.ones_like(predictions['rate']),
-                    "generator": {
-                        "image": tf.cast(x,self.compute_dtype) / 255.,
-                        "fake_out": tf.ones_like(predictions['generator']['fake_out'])
-                    },
-                    "discriminator": {
-                        "real_out": tf.ones_like(predictions['discriminator']['real_out']),
-                        "fake_out": tf.zeros_like(predictions['discriminator']['fake_out'])
-                    }
-                }
-            loss = {}
-            loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
-            loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
-            loss['discriminator_loss'] = self.loss['discriminator'](true_tensor['discriminator'],predictions['discriminator'])
-            
-            with self.tf_writer.as_default(step=self._test_counter):
-                tf.summary.scalar("rate",loss['rate'])
-                tf.summary.scalar("generator",loss['generator_loss'])
-                tf.summary.scalar("discriminator",loss["discriminator_loss"])
-                tf.summary.image("original",x)
-                tf.summary.image("regenerated",tf.cast(predictions['generator']['image']*255.,tf.uint8))
-            
-            for metric in self.metrics:
-                metric.update_state(loss[metric.name])
-            
-            return {"generator_loss": loss['generator_loss'],
-                    "discriminator_loss": loss['discriminator_loss'],
-                    'rate': loss['rate']}
-            
-        else:
-           
+        with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             predictions = self(x,training=True)
+            
             true_tensor = {
                 "rate": tf.ones_like(predictions['rate']),
                 "generator": tf.cast(x,self.compute_dtype) / 255.
@@ -158,21 +33,49 @@ class ImageCompressor(tf.keras.Model):
             loss = {}
             loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
             loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
-                
             
-            with self.tf_writer.as_default(step=self._train_counter):
-                tf.summary.scalar("rate",loss['rate'])
-                tf.summary.scalar("generator",loss['generator_loss'])
-                tf.summary.image("original",x)
-                tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
+        with self.tf_writer.as_default(step=self._train_counter):
+            tf.summary.scalar("rate",loss['rate'])
+            tf.summary.scalar("generator",loss['generator_loss'])
+            tf.summary.image("original",x)
+            tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
             
-            for metric in self.metrics:
-                metric.update_state(loss[metric.name])
-            
-            return {
-                "rate": loss['rate'],
-                "generator_loss": loss['generator_loss'] 
+        generator_gradients = gen_tape.gradient(loss['generator_loss'],self.generator.trainable_variables)
+        
+        
+        self.generator_optimizer.apply_gradients(zip(generator_gradients,self.generator.trainable_variables))
+        
+        for metric in self.metrics:
+            metric.update_state(loss[metric.name])
+        
+        return {"generator_loss": loss['generator_loss'],
+                'rate': loss['rate']}
+        
+    @tf.function
+    def test_step(self,x):
+        
+        
+        
+        predictions = self(x,training=False)
+        true_tensor = {
+                "rate": tf.ones_like(predictions['rate']),
+                "generator": tf.cast(x,self.compute_dtype) / 255.                    
             }
+        loss = {}
+        loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
+        loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
+        
+        with self.tf_writer.as_default(step=self._test_counter):
+            tf.summary.scalar("rate",loss['rate'])
+            tf.summary.scalar("generator",loss['generator_loss'])
+            tf.summary.image("original",x)
+            tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
+        
+        for metric in self.metrics:
+            metric.update_state(loss[metric.name])
+        
+        return {"generator_loss": loss['generator_loss'],
+                'rate': loss['rate']}
         
         
     
