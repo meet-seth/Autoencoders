@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_compression as tfc
 import constants as const
 class ImageCompressor(tf.keras.Model):
     def __init__(self,inputs,outputs,generator,discriminator,log_dir,*args, **kwargs):
@@ -112,31 +111,15 @@ class Encoder(tf.keras.Model):
         self.dtype_conversion_layer = tf.keras.layers.Lambda(lambda x: tf.cast(x,self.compute_dtype) / 255.)
         self.reshaping_layer = tf.keras.layers.Reshape(target_shape=self.reshaping)
         
-    def set_compression(self,val):
-        self.compression = val
-        if self.compression:
-            self.entropy_model = tfc.ContinuousBatchedEntropyModel(self.prior,coding_rank=1,compression=self.compression)
-        else:
-            self.entropy_model = None
-        
-    @property
-    def prior(self):
-        return tfc.NoisyLogistic(loc=0.,scale = tf.exp(self.prior_log_scale))
     
     @tf.function
-    def call(self,x,training):
+    def call(self,x):
         x = self.dtype_conversion_layer(x)
         x = self.reshaping_layer(x)
         
         y = self.model(x)
         
-        if not self.entropy_model:
-            entropy_model = tfc.ContinuousBatchedEntropyModel(self.prior,coding_rank=1,compression=False)
-            y_tilde, rank = entropy_model(y,training=training)
-            return y_tilde, rank
-        else:
-            _, bits = self.entropy_model(y,training=False)
-            return self.entropy_model.compress(y), bits
+        return y
             
             
 
@@ -146,21 +129,8 @@ class Decoder(tf.keras.Model):
         super().__init__(*args, **kwargs)
         self.model = sequential_model
         self._name = self.model._name
-        self.decompression = False
-        self.entropy_model = None
-        
-        
-        
-    def set_decompression(self,val,entropy_model):
-        self.decompression = val
-        if self.decompression:
-            self.entropy_model = entropy_model
-        else:
-            self.entropy_model = None
             
     def call(self,x):
-        if self.entropy_model:
-            x = self.entropy_model.decompress(x)
         decoder_output = self.model(x)
         
         return decoder_output
