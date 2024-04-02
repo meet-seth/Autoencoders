@@ -38,69 +38,9 @@ class SSIMLoss(tf.keras.losses.Loss):
     
     def call(self,y_true,y_pred):
         
-        mu_1 = tf.nn.conv2d(
-            y_true,
-            self.gaussian_kernel,
-            padding=self.padding,
-            strides=self.strides
-        )
+        ssim_score = tf.image.ssim(y_true,y_pred,1.0)
         
-        mu_2 = tf.nn.conv2d(
-            y_pred,
-            self.gaussian_kernel,
-            padding=self.padding,
-            strides=self.strides
-        )
-        
-        mu_1_squared = tf.math.square(mu_1)
-        mu_2_squared = tf.math.square(mu_2)
-        mu_1_2 = tf.math.multiply(mu_1,mu_2)
-        
-        x_1 = tf.nn.conv2d(
-            tf.math.square(y_true),
-            self.gaussian_kernel,
-            padding=self.padding,
-            strides=self.strides
-        )
-        sigma_1_sqaured = tf.math.subtract(
-            x_1,mu_1_squared
-        )
-        
-        x_2 = tf.nn.conv2d(
-            tf.math.square(y_pred),
-            self.gaussian_kernel,
-            padding=self.padding,
-            strides=self.strides
-        )
-        sigma_2_squared = tf.math.subtract(
-            x_2,mu_2_squared
-        )
-        
-        x_1_2 = tf.nn.conv2d(
-            tf.math.multiply(y_true,y_pred),
-            self.gaussian_kernel,
-            padding=self.padding,
-            strides=self.strides
-        )
-        
-        sigma_1_2 = tf.math.subtract(
-            x_1_2, mu_1_2
-        )
-        
-        numerator_1 = tf.math.add(tf.math.scalar_mul(self.M,mu_1_2),self.C1)
-        numerator_2 = tf.math.add(tf.math.scalar_mul(self.M,sigma_1_2),self.C2)
-        
-        denominator_1 = tf.math.add(tf.math.add(mu_1_squared,mu_2_squared),self.C1)
-        denominator_2 = tf.math.add(tf.math.add(sigma_1_sqaured,sigma_2_squared),self.C2)
-        
-        ssim_score = tf.math.reduce_mean(
-            tf.math.divide(
-                tf.math.multiply(numerator_1,numerator_2),
-                tf.math.multiply(denominator_1,denominator_2)
-            )
-        )
-        
-        return self.weight*ssim_score
+        return ssim_score
         
         
 

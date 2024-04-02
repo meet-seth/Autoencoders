@@ -14,7 +14,6 @@ class ImageCompressor(tf.keras.Model):
         regenerated_output,rate = self.generator(x,training=training)
         
         return {
-            "rate": rate,
             "generator": regenerated_output
         }
         
@@ -26,15 +25,12 @@ class ImageCompressor(tf.keras.Model):
             predictions = self(x,training=True)
             
             true_tensor = {
-                "rate": tf.ones_like(predictions['rate']),
                 "generator": tf.cast(x,self.compute_dtype) / 255.
             }
             loss = {}
-            loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
             loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
             
         with self.tf_writer.as_default(step=self._train_counter):
-            tf.summary.scalar("rate",loss['rate'])
             tf.summary.scalar("generator",loss['generator_loss'])
             tf.summary.image("original",x)
             tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
@@ -47,8 +43,7 @@ class ImageCompressor(tf.keras.Model):
         for metric in self.metrics:
             metric.update_state(loss[metric.name])
         
-        return {"generator_loss": loss['generator_loss'],
-                'rate': loss['rate']}
+        return {"generator_loss": loss['generator_loss']}
         
     @tf.function
     def test_step(self,x):
@@ -57,15 +52,12 @@ class ImageCompressor(tf.keras.Model):
         
         predictions = self(x,training=False)
         true_tensor = {
-                "rate": tf.ones_like(predictions['rate']),
                 "generator": tf.cast(x,self.compute_dtype) / 255.                    
             }
         loss = {}
-        loss['rate'] = self.loss['rate'](true_tensor['rate'],predictions['rate'])
         loss['generator_loss'] = self.loss['generator'](true_tensor['generator'],predictions['generator'])
         
         with self.tf_writer.as_default(step=self._test_counter):
-            tf.summary.scalar("rate",loss['rate'])
             tf.summary.scalar("generator",loss['generator_loss'])
             tf.summary.image("original",x)
             tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
