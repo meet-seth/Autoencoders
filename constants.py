@@ -3,10 +3,6 @@ BATCH_SIZE = 32
 LEARNING_RATE = 1e-3
 LATENT_DIMS = 1000
 EPOCHS = 15
-GENERATOR_WEIGHTS = {
-    'distortion': 2000.,
-    'discriminator': 100
-}
 CHANNELS=3
 SSIM_SIGMA = 1.5
 LOSS_WEIGHT = 1.
