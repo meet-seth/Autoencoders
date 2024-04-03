@@ -21,7 +21,7 @@ class ImageCompressor(tf.keras.Model):
         
     @tf.function
     def _post_process(self,x):
-        return tf.clip_by_value(x,clip_value_min=0.,clip_value_max=1.)
+        return tf.clip_by_value(x,clip_value_min=0,clip_value_max=1)
     
     @tf.function
     def train_step(self,x):
@@ -55,8 +55,7 @@ class ImageCompressor(tf.keras.Model):
         
         
         
-        predictions = self(x,training=False)
-        predictions['generator'] = self._post_process(predictions['generator'])
+        predictions = self(x,training=True)
         true_tensor = {
                 "generator": tf.cast(x,self.compute_dtype) / 255.                    
             }
