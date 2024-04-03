@@ -23,8 +23,7 @@ class Process:
                  latent_dims,
                  epochs,
                  save_dir,
-                 model_export_dir,
-                 model_name):
+                 checkpoint_filepath):
         
         const.LEARNING_RATE = learning_rate        
         if model.endswith('.json'):
@@ -39,8 +38,7 @@ class Process:
         self.epochs = epochs
         self.histories = []
         self.save_dir = save_dir
-        self.model_export_dir = model_export_dir
-        self.model_name = model_name
+        self.checkpoint_filepath = checkpoint_filepath
     
     def start(self):
         if self.mode=='train':
@@ -58,9 +56,9 @@ class Process:
                           batch_size=self.batch_size,
                           learning_rate=self.learning_rate,
                           log_dir=self.log_dir,
-                          epochs=self.epochs)
+                          epochs=self.epochs,
+                          checkpoint_filepath=self.checkpoint_filepath)
         self.model, self.histories = trainer.train()
-        self.save_model(self.model)
     
     def run_validation(self):
         validator = Validator(
@@ -80,12 +78,6 @@ class Process:
         )
         
         self.inferred_outputs = predictor.infer(self.dataset)
-    
-    def save_model(self,model):
-        
-        print(f"Saving model at {self.model_export_dir}/{self.model_name}.keras")
-        model.save(f"{self.model_export_dir}/{self.model_name}.keras")
-    
 
 
 if __name__ == "__main__":
@@ -150,14 +142,10 @@ if __name__ == "__main__":
                         default=None,
                         type=str
     )
-    parser.add_argument('--model_export_dir',
-                        help="Save model to this directory",
-                        default="./model",
-                        type=str
-    )
-    parser.add_argument('--model_name',
-                        help="Name of the model file to be exported to",
-                        default="ImageCompressor",
+
+    parser.add_argument('--checkpoint_filepath',
+                        help="Path to save model checkpoints while training",
+                        default=const.CKPT_PATH,
                         type=str)
     
     parser.add_argument # Add Verbosity Argument

@@ -8,3 +8,4 @@ SSIM_SIGMA = 1.5
 LOSS_WEIGHT = 1.
 ALPHA = 0.75
 LABEL_FOR_CIFAR10 = 1
+CKPT_PATH = './checkpoints/model.ckpt'

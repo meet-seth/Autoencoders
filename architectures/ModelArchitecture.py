@@ -1,8 +1,9 @@
 import tensorflow as tf
 import constants as const
 class ImageCompressor(tf.keras.Model):
-    def __init__(self,inputs,outputs,generator,log_dir,*args, **kwargs):
+    def __init__(self,inputs,outputs,generator,log_dir,metrics,*args, **kwargs):
         super().__init__(*args,inputs=inputs,outputs=outputs,**kwargs)
+        self.custom_metrics = metrics
         self.tf_writer = tf.summary.create_file_writer(log_dir)
         self.generator = generator
         self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
@@ -44,11 +45,19 @@ class ImageCompressor(tf.keras.Model):
         
         
         self.generator_optimizer.apply_gradients(zip(generator_gradients,self.generator.trainable_variables))
+
         
         for metric in self.metrics:
-            metric.update_state(loss[metric.name])
-        
-        return {"generator_loss": loss['generator_loss']}
+            metric.update_state(true_tensor['generator'],predictions['generator'])
+     
+        mtr = {m.name: m.result() for m in self.metrics}
+        mtr['generator_loss'] = loss['generator_loss']
+       
+        return mtr
+    
+    @property
+    def metrics(self):
+        return self.custom_metrics
         
     @tf.function
     def test_step(self,x):
@@ -66,18 +75,16 @@ class ImageCompressor(tf.keras.Model):
             tf.summary.scalar("generator",loss['generator_loss'])
             tf.summary.image("original",x)
             tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
+
         
         for metric in self.metrics:
-            if metric.name in ['SSIM','PSNR']:
-                metric.update_state(true_tensor['generator'],predictions['generator'])
-            else:
-                metric.update_state(loss[metric.name])
+            metric.update_state(true_tensor['generator'],predictions['generator'])
+            
+        mtr = {m.name: m.result() for m in self.metrics}
+        mtr['generator_loss'] = loss['generator_loss']
         
-        return {
-            "generator_loss": loss['generator_loss']
-        }
-        
-        
+        return mtr
+    
     
 class Generator(tf.keras.Model):
     def __init__(self,config, input_shape, *args, **kwargs):

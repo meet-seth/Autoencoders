@@ -1,6 +1,7 @@
 import json
 import tensorflow as tf
 from architectures.ModelArchitecture import ImageCompressor, Generator
+from architectures.MetricsArchitecture import *
 class ModelBuilder:
     
     def __init__(self,model_path):
@@ -27,7 +28,7 @@ class ModelBuilder:
         model_conf = self.build_model_from_json(self.model_config)
         
         inputs,outputs,generator = self.generate_outputs(model_conf)
-        model = ImageCompressor(inputs=inputs,outputs=outputs,generator=generator,log_dir=log_dir)
+        model = ImageCompressor(inputs=inputs,outputs=outputs,generator=generator,log_dir=log_dir,metrics = [PSNR_Metric(),SSIM_Metric()])
         print(model.summary())
         return model
        

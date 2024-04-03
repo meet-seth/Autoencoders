@@ -8,14 +8,16 @@ class PSNR_Metric(tf.keras.metrics.Metric):
             initializer='zeros'
         )
     
-    def update_state(self,y_true,y_pred):
-        mse = tf.keras.losses.mean_squared_error(y_true,y_pred) + .00001
+    def update_state(self,y_true,y_pred,sample_weight=None):
+        mse = tf.math.reduce_mean(tf.math.square(y_true - y_pred)) + .00001
         psnr = tf.math.log(10.) / (-10. * tf.math.log(mse))
-        
         self.psnr.assign(psnr)
         
     def result(self):
         return self.psnr
+    
+    def reset_state(self):
+        self.psnr.assign(0.)
     
 class SSIM_Metric(tf.keras.metrics.Metric):
     def __init__(self, name='SSIM', **kwargs):
@@ -25,9 +27,12 @@ class SSIM_Metric(tf.keras.metrics.Metric):
             initializer='zeros'
         )
         
-    def update_state(self, y_true,y_pred):
-        ssim = tf.image.ssim(y_true,y_pred)
+    def update_state(self, y_true,y_pred,sample_weight=None):
+        ssim = tf.math.reduce_mean(tf.image.ssim(y_true,y_pred,1.0))
         self.ssim.assign(ssim)
         
     def result(self):
         return self.ssim
+    
+    def reset_state(self):
+        return self.ssim.assign(0.)
