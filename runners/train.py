@@ -1,7 +1,6 @@
 import tensorflow as tf
-import constants as const
 from architectures.LossArchitecture import *
-
+from architectures.MetricsArchitecture import *
 class Trainer:
     def __init__(self,model,dataset,batch_size,learning_rate,log_dir,epochs):
         self.model = model
@@ -11,29 +10,14 @@ class Trainer:
         self.log_dir = log_dir
         self.epochs = epochs
         
-    def train(self):
-        if const.DISCRIMINATOR:
-            self.model.compile(
-                loss = {
-                    'rate': RateLoss(),
-                    'generator': GeneratorLoss(),
-                    'discriminator': DiscriminatorLoss()
-                }
-            )
-            
-            
-        
-        else:
-            self.model.compile(
-                loss = {
-                    'rate': RateLoss(),
-                    'generator': PSNRLoss()
-                },
-                loss_weights={
-                    'rate': 1.,
-                    'generator': 100
-                }
-            )
+    def train(self):           
+    
+        self.model.compile(
+            loss = {
+                'generator': SSIMLoss()
+            },
+            metrics = [PSNR_Metric(),SSIM_Metric()]
+        )
             
         self.history = self.model.fit(
                 self.dataset['train'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
