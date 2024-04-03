@@ -33,6 +33,7 @@ class Trainer:
                         self.checpoint_filepath,
                         monitor='val_loss',
                         mode='min',
+                        save_best_only=True,
                         save_weights_only=True,
                         save_freq='epoch'
                     )]
