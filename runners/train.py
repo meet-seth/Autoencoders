@@ -31,7 +31,7 @@ class Trainer:
                     write_images=True),
                     tf.keras.callbacks.ModelCheckpoint(
                         self.checpoint_filepath,
-                        monitor='val_loss',
+                        monitor='val_generator_loss',
                         mode='min',
                         save_best_only=True,
                         save_weights_only=True,
