@@ -73,10 +73,12 @@ class DatasetBuilder:
                         images.append(i)
                         
                 images = pd.DataFrame.from_dict(images)
+                print("Loading Dataset")
                 self.dataset['train'] = tf.data.Dataset.from_tensor_slices(images[:5000].to_dict(orient='list')).map(self.mapper)
                 self.dataset['val'] = tf.data.Dataset.from_tensor_slices(images[5000:5500].to_dict(orient='list')).map(self.mapper)
                 self.dataset['test'] = tf.data.Dataset.from_tensor_slices(images[5500:].to_dict(orient='list')).map(self.mapper)
                 self.dataset['info'] = info
+                print("Loaded Dataset")
         
         else:
             assert "Not Implemented for reading directory dataset"
