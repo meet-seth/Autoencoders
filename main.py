@@ -22,7 +22,9 @@ class Process:
                  learning_rate,
                  latent_dims,
                  epochs,
-                 save_dir):
+                 save_dir,
+                 model_export_dir,
+                 model_name):
         
         const.LEARNING_RATE = learning_rate        
         if model.endswith('.json'):
@@ -37,7 +39,8 @@ class Process:
         self.epochs = epochs
         self.histories = []
         self.save_dir = save_dir
-        
+        self.model_export_dir = model_export_dir
+        self.model_name = model_name
     
     def start(self):
         if self.mode=='train':
@@ -49,7 +52,7 @@ class Process:
         elif self.mode=='pred':
             self.run_inference()
         
-    def run_training(self,):
+    def run_training(self):
         trainer = Trainer(model=self.model,
                           dataset=self.dataset,
                           batch_size=self.batch_size,
@@ -57,6 +60,7 @@ class Process:
                           log_dir=self.log_dir,
                           epochs=self.epochs)
         self.model, self.histories = trainer.train()
+        self.save_model(self.model)
     
     def run_validation(self):
         validator = Validator(
@@ -77,7 +81,10 @@ class Process:
         
         self.inferred_outputs = predictor.infer(self.dataset)
     
+    def save_model(self,model):
         
+        print(f"Saving model at {self.model_export_dir}/{self.model_name}.keras")
+        model.save(f"{self.model_export_dir}/{self.model_name}.keras")
     
 
 
@@ -131,14 +138,26 @@ if __name__ == "__main__":
     parser.add_argument("--latent_dims",
                         help='Latent Dimenstions for encoded outptut',
                         default=const.LATENT_DIMS,
-                        type=int)
+                        type=int
+    )
     parser.add_argument("--epochs",
                         help='Latent Dimenstions for encoded outptut',
                         default=const.EPOCHS,
-                        type=int)
+                        type=int
+    )
     parser.add_argument("--save_dir",
                         help="Saving Directory for infered images",
                         default=None,
+                        type=str
+    )
+    parser.add_argument('--model_export_dir',
+                        help="Save model to this directory",
+                        default="./model",
+                        type=str
+    )
+    parser.add_argument('--model_name',
+                        help="Name of the model file to be exported to",
+                        default="ImageCompressor",
                         type=str)
     
     parser.add_argument # Add Verbosity Argument
