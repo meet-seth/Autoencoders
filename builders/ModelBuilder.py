@@ -1,7 +1,6 @@
 import json
 import tensorflow as tf
-import constants as const
-from architectures.ModelArchitecture import ImageCompressor, Generator, Discriminator
+from architectures.ModelArchitecture import ImageCompressor, Generator
 class ModelBuilder:
     
     def __init__(self,model_path):
@@ -28,8 +27,7 @@ class ModelBuilder:
         model_conf = self.build_model_from_json(self.model_config)
         
         inputs,outputs,generator = self.generate_outputs(model_conf)
-        discriminator = None
-        model = ImageCompressor(inputs=inputs,outputs=outputs,generator=generator,discriminator=discriminator,log_dir=log_dir)
+        model = ImageCompressor(inputs=inputs,outputs=outputs,generator=generator,log_dir=log_dir)
         print(model.summary())
         return model
        
@@ -39,12 +37,11 @@ class ModelBuilder:
             if sub_model =='inputs':
                 inputs_layer = value
             elif sub_model == 'generator':
-                generator = Generator(self.latent_dims,value,inputs_layer.shape[1:],name=name)
+                generator = Generator(value,inputs_layer.shape[1:],name=name)
                 
                 
-        regenerated_output,rate = generator(inputs_layer,training=False)
+        regenerated_output = generator(inputs_layer,training=False)
         outputs_dict = {
-            "rate": rate,
             "generator": regenerated_output
         }
         

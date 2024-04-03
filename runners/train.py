@@ -1,7 +1,6 @@
 import tensorflow as tf
-import constants as const
 from architectures.LossArchitecture import *
-
+from architectures.MetricsArchitecture import *
 class Trainer:
     def __init__(self,model,dataset,batch_size,learning_rate,log_dir,epochs):
         self.model = model
@@ -15,13 +14,9 @@ class Trainer:
     
         self.model.compile(
             loss = {
-                'rate': RateLoss(),
                 'generator': SSIMLoss()
             },
-            loss_weights={
-                'rate': 1.,
-                'generator': 1.
-            }
+            metrics = [PSNR_Metric(),SSIM_Metric()]
         )
             
         self.history = self.model.fit(

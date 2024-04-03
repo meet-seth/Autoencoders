@@ -21,7 +21,8 @@ class Process:
                  batch_size,
                  learning_rate,
                  latent_dims,
-                 epochs):
+                 epochs,
+                 save_dir):
         
         const.LEARNING_RATE = learning_rate        
         if model.endswith('.json'):
@@ -34,6 +35,8 @@ class Process:
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.histories = []
+        self.save_dir = save_dir
         
     
     def start(self):
@@ -53,13 +56,26 @@ class Process:
                           learning_rate=self.learning_rate,
                           log_dir=self.log_dir,
                           epochs=self.epochs)
-        trainer.train()
+        self.model, self.histories = trainer.train()
     
     def run_validation(self):
-        pass
-    
+        validator = Validator(
+            model=self.model,
+            dataset=self.dataset['val'],
+            batch_size=self.batch_size,
+            log_dir=self.log_dir
+        )
+
+        self.losses_dict = validator.evalulate()
+        
     def run_inference(self):
-        pass
+        
+        predictor = Inference(
+            self.model,
+            self.save_dir
+        )
+        
+        self.inferred_outputs = predictor.infer(self.dataset)
     
         
     
@@ -69,26 +85,30 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("mode",
+    parser.add_argument("--mode",
                         default="train",
                         help="Define train validation or prediction mode.", 
                         choices=['train','val','pred'],
                         type=str,
+                        required=True
     )
     
-    parser.add_argument("model",
+    parser.add_argument("--model",
                         help="Path to model.json file for new model creation or savedmodel format for fine tuning.",
-                        type=str
+                        type=str,
+                        required=True
     )
     
-    parser.add_argument("tfds",
+    parser.add_argument("--tfds",
                         help="Weather to use Tensorflow datasets as source or not",
-                       type=bool
+                       type=bool,
+                       required=True
     )
     
-    parser.add_argument("dataset",
+    parser.add_argument("--dataset",
                         help="Name of dataset in case tfds is True otherwise path to directory that holds images.",
-                        type=str
+                        type=str,
+                        required=True
     )
     
     parser.add_argument("--log_dir",
@@ -116,6 +136,10 @@ if __name__ == "__main__":
                         help='Latent Dimenstions for encoded outptut',
                         default=const.EPOCHS,
                         type=int)
+    parser.add_argument("--save_dir",
+                        help="Saving Directory for infered images",
+                        default=None,
+                        type=str)
     
     parser.add_argument # Add Verbosity Argument
     

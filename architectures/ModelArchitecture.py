@@ -1,27 +1,32 @@
 import tensorflow as tf
 import constants as const
 class ImageCompressor(tf.keras.Model):
-    def __init__(self,inputs,outputs,generator,discriminator,log_dir,*args, **kwargs):
+    def __init__(self,inputs,outputs,generator,log_dir,*args, **kwargs):
         super().__init__(*args,inputs=inputs,outputs=outputs,**kwargs)
         self.tf_writer = tf.summary.create_file_writer(log_dir)
         self.generator = generator
-        self.discriminator = discriminator
         self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
 
            
     def call(self,x,training):
         
-        regenerated_output,rate = self.generator(x,training=training)
+        regenerated_output = self.generator(x,training=training)
+        
+        if not training:
+            regenerated_output = self._post_process(x)
         
         return {
             "generator": regenerated_output
         }
         
+    @tf.function
+    def _post_process(self,x):
+        return tf.clip_by_value(x,clip_value_min=0.,clip_value_max=1.)
     
     @tf.function
     def train_step(self,x):
         
-        with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+        with tf.GradientTape() as gen_tape:
             predictions = self(x,training=True)
             
             true_tensor = {
@@ -33,7 +38,7 @@ class ImageCompressor(tf.keras.Model):
         with self.tf_writer.as_default(step=self._train_counter):
             tf.summary.scalar("generator",loss['generator_loss'])
             tf.summary.image("original",x)
-            tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
+            tf.summary.image("regenerated",tf.cast(self._post_process(predictions['generator'])*255.,tf.uint8))
             
         generator_gradients = gen_tape.gradient(loss['generator_loss'],self.generator.trainable_variables)
         
@@ -51,6 +56,7 @@ class ImageCompressor(tf.keras.Model):
         
         
         predictions = self(x,training=False)
+        predictions['generator'] = self._post_process(predictions['generator'])
         true_tensor = {
                 "generator": tf.cast(x,self.compute_dtype) / 255.                    
             }
@@ -63,43 +69,42 @@ class ImageCompressor(tf.keras.Model):
             tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
         
         for metric in self.metrics:
-            metric.update_state(loss[metric.name])
+            if metric.name in ['SSIM','PSNR']:
+                metric.update_state(true_tensor['generator'],predictions['generator'])
+            else:
+                metric.update_state(loss[metric.name])
         
-        return {"generator_loss": loss['generator_loss'],
-                'rate': loss['rate']}
+        return {
+            "generator_loss": loss['generator_loss']
+        }
         
         
     
 class Generator(tf.keras.Model):
-    def __init__(self,latent_dims,config, input_shape, *args, **kwargs):
+    def __init__(self,config, input_shape, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = config
         self._name = self.config['name']
-        self.latent_dims = latent_dims
         for sub_model, value in self.config.items():
             if sub_model == 'encoder':
-                self.encoder = Encoder(self.latent_dims,value,input_shape)
+                self.encoder = Encoder(value,input_shape)
             elif sub_model == 'decoder':
                 self.decoder = Decoder(value)
                 
-    def call(self,x,training):
-        encoded_output, rate = self.encoder(x,training=training)
+    def call(self,x):
+        encoded_output = self.encoder(x)
         regenerated_output = self.decoder(encoded_output)
         
-        return regenerated_output, rate
+        return regenerated_output
         
                 
 
 class Encoder(tf.keras.Model):
-    def __init__(self,latent_dims, sequential_model,input_shape,*args, compressed=False,**kwargs):
+    def __init__(self, sequential_model,input_shape,*args,**kwargs):
         super().__init__(*args, **kwargs)
         self.model = sequential_model
         self._name = self.model.name
-        self.latent_dims = latent_dims
-        self.prior_log_scale= tf.Variable(tf.zeros(self.latent_dims))
-        self.compression = compressed
         self.reshaping = input_shape
-        self.entropy_model = None
         self.dtype_conversion_layer = tf.keras.layers.Lambda(lambda x: tf.cast(x,self.compute_dtype) / 255.)
         self.reshaping_layer = tf.keras.layers.Reshape(target_shape=self.reshaping)
         
@@ -108,13 +113,9 @@ class Encoder(tf.keras.Model):
     def call(self,x):
         x = self.dtype_conversion_layer(x)
         x = self.reshaping_layer(x)
-        
         y = self.model(x)
         
         return y
-            
-            
-
         
 class Decoder(tf.keras.Model):
     def __init__(self, sequential_model,*args, **kwargs):
@@ -126,23 +127,3 @@ class Decoder(tf.keras.Model):
         decoder_output = self.model(x)
         
         return decoder_output
-    
-        
-
-class Discriminator(tf.keras.Model):
-    def __init__(self, sequential_model,input_shape,*args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model = sequential_model
-        self._name = self.model.name
-        self.reshaping = input_shape
-        self.dtype_conversion_layer = tf.keras.layers.Lambda(lambda x: tf.cast(x,self.compute_dtype) / 255.)
-        self.reshaping_layer = tf.keras.layers.Reshape(target_shape=self.reshaping)
-    
-    @tf.function
-    def call(self,x,reshape):
-        if reshape:
-            x = self.dtype_conversion_layer(x)
-            x = self.reshaping_layer(x)
-        discriminator_output = self.model(x)
-        return discriminator_output
-        

@@ -94,7 +94,7 @@
                     },
                     {
                         "Dense": {
-                            "units": 9261,
+                            "units": 9216,
                             "activation": "leaky_relu",
                             "name": "decoder_layer_2"
                         }
