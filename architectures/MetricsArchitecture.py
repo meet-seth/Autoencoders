@@ -9,8 +9,7 @@ class PSNR_Metric(tf.keras.metrics.Metric):
         )
     
     def update_state(self,y_true,y_pred,sample_weight=None):
-        mse = tf.math.reduce_mean(tf.math.square(y_true - y_pred)) + .00001
-        psnr = tf.math.log(10.) / (-10. * tf.math.log(mse))
+        psnr = tf.image.psnr(y_true,y_pred,1.0)
         self.psnr.assign(psnr)
         
     def result(self):
