@@ -122,11 +122,17 @@ class Encoder(tf.keras.Model):
         y = self.model(x)
         
         return y
+    
+class ClipplingLayer(tf.keras.layers.Layer):
+    
+    def call(self,inputs):
+        return tf.clip_by_value(inputs,clip_value_min=0.,clip_value_max=1.)
         
 class Decoder(tf.keras.Model):
     def __init__(self, sequential_model,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = sequential_model
+        self.model.add(ClipplingLayer())
         self._name = self.model._name
             
     def call(self,x):
