@@ -36,18 +36,4 @@ class GeneratorLoss(tf.keras.losses.Loss):
         total_loss = const.GENERATOR_WEIGHTS['distortion']*distortion_loss + const.GENERATOR_WEIGHTS['discriminator']*discriminator_loss
         
         return total_loss
-    
-class DiscriminatorLoss(tf.keras.losses.Loss):
-    def __init__(self, reduction='auto',name=None):
-        super().__init__(reduction=reduction,name=name)
-        self.cross_entropy = tf.keras.losses.binary_crossentropy
-        
-    def call(self,y_true,y_preds):
-
-        real_loss = self.cross_entropy(y_true['real_out'],y_preds['real_out'])
-        fake_loss = self.cross_entropy(y_true['fake_out'],y_preds['fake_out'])
-        
-        total_loss = real_loss + fake_loss
-        
-        return total_loss
         
