@@ -14,7 +14,7 @@ class ModelBuilder:
             self.model_config = json.load(f)
             f.close()
         
-    def build(self,latent_dims,log_dir):
+    def build(self,latent_dims,log_dir,learning_rate):
         """
         Starts the model building process. Is called from main.py
 
@@ -28,7 +28,16 @@ class ModelBuilder:
         model_conf = self.build_model_from_json(self.model_config)
         
         inputs,outputs,generator = self.generate_outputs(model_conf)
-        model = ImageCompressor(inputs=inputs,outputs=outputs,generator=generator,log_dir=log_dir,metrics = [PSNR_Metric(),SSIM_Metric()])
+        model = ImageCompressor(inputs=inputs,
+                                outputs=outputs,
+                                generator=generator,
+                                log_dir=log_dir,
+                                metrics=[
+                                    PSNR_Metric(),
+                                    SSIM_Metric()
+                                ],
+                                learning_rate=learning_rate
+                            )
         print(model.summary())
         return model
        
