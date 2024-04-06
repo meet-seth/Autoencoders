@@ -1,12 +1,11 @@
 import tensorflow as tf
-import constants as const
 class ImageCompressor(tf.keras.Model):
-    def __init__(self,inputs,outputs,generator,log_dir,metrics,*args, **kwargs):
+    def __init__(self,inputs,outputs,generator,log_dir,metrics,learning_rate,*args, **kwargs):
         super().__init__(*args,inputs=inputs,outputs=outputs,**kwargs)
         self.custom_metrics = metrics
         self.tf_writer = tf.summary.create_file_writer(log_dir)
         self.generator = generator
-        self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
+        self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
            
     def call(self,x,training):
