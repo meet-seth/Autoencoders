@@ -1,0 +1,13 @@
+TENSORBOARD_LOG_DIRECTORY = './log/tensorboard/'
+BATCH_SIZE = 32
+LEARNING_RATE = 1e-3
+LATENT_DIMS = 50
+EPOCHS = 15
+CHANNELS=3
+SSIM_SIGMA = 1.5
+LOSS_WEIGHT = 1.
+ALPHA = 0.75
+LABEL_FOR_CIFAR10 = 1
+CKPT_PATH = './checkpoints/model.ckpt'
+VERBOSITY=2
+SAVE_DIR='./regenerated_images/'
