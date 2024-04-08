@@ -3,6 +3,8 @@ import argparse
 import constants.constants as const
 from builders.DatasetBuilder import DatasetBuilder
 from builders.ModelBuilder import ModelBuilder
+from architectures.LossArchitecture import *
+from architectures.MetricsArchitecture import *
 
 class Validator:
     def __init__(self,
@@ -20,28 +22,38 @@ class Validator:
                 learning_rate=const.LEARNING_RATE
             )
             if ckpt_path:
-                self.model.load_weights(ckpt_path)
+                latest = tf.train.latest_checkpoint(ckpt_path)
+                checkpoint = tf.train.Checkpoint(self.model)
+                checkpoint.restore(latest).expect_partial()
         else:
             self.model = tf.keras.models.load_model(model)
                  
         self.dataset = DatasetBuilder(tfds,
                                       dataset).build()
         self.batch_size = batch_size
+        self.dataset = self.dataset['val'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE)
         self.log_dir = log_dir
         
     def evalulate(self):
-            losses_dict = self.model.evaluate(
-                self.dataset,
-                batch_size=self.batch_size,
-                callbacks=[tf.keras.callbacks.TensorBoard(
-                    log_dir=self.log_dir,
-                    write_graph=True,
-                    write_images=True,
-                )],
-                return_dict=True
-            )
-            
-            return losses_dict
+        
+        self.model.compile(
+            loss = {
+                'generator': SSIMLoss()
+            },
+            metrics=[PSNR_Metric(),SSIM_Metric()]
+        )        
+        losses_dict = self.model.evaluate(
+            self.dataset,
+            batch_size=self.batch_size,
+            callbacks=[tf.keras.callbacks.TensorBoard(
+                log_dir=self.log_dir,
+                write_graph=True,
+                write_images=True,
+            )],
+            return_dict=True
+        )
+        
+        return losses_dict
         
 if __name__=='__main__':
     
