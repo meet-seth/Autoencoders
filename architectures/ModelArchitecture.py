@@ -9,7 +9,6 @@ class ImageCompressor(tf.keras.Model):
 
            
     def call(self,x,training):
-        
         regenerated_output = self.generator(x,training=training)
         
         if not training:
@@ -21,7 +20,7 @@ class ImageCompressor(tf.keras.Model):
         
     @tf.function
     def _post_process(self,x):
-        return tf.clip_by_value(x,clip_value_min=0,clip_value_max=1)
+        return tf.clip_by_value(x,clip_value_min=0.,clip_value_max=1.)
     
     @tf.function
     def train_step(self,x):

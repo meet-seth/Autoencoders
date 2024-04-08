@@ -1,7 +1,7 @@
+import tensorflow as tf
 import tensorflow_datasets as tfds
 import constants.constants as const
 import pandas as pd
-import tensorflow as tf
 
 class DatasetBuilder:
     
@@ -30,7 +30,6 @@ class DatasetBuilder:
         if self.is_tfds:
             
             if self.dataset_name_or_path=='mnist':
-                
                 ds, info= tfds.load(
                     self.dataset_name_or_path,
                     split=[
@@ -39,15 +38,14 @@ class DatasetBuilder:
                         'test'
                     ],
                     shuffle_files=True,
-                    try_gcs=False,
+                    try_gcs=True,
                     with_info=True
                 )
                 
-                self.dataset['train'] = ds[0].map(self.tfds_mapper)
-                self.dataset['val'] = ds[1].map(self.tfds_mapper)
-                self.dataset['test'] = ds[2].map(self.tfds_mapper)
+                self.dataset['train'] = ds[0].map(self.tfds_mapper,num_parallel_calls=tf.data.AUTOTUNE)
+                self.dataset['val'] = ds[1].map(self.tfds_mapper,num_parallel_calls=tf.data.AUTOTUNE)
+                self.dataset['test'] = ds[2].map(self.tfds_mapper,num_parallel_calls=tf.data.AUTOTUNE)
                 self.dataset['info'] = info
-                const.CHANNELS = 1
                 
             elif self.dataset_name_or_path=='eurosat':
                 

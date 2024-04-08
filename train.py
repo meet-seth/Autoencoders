@@ -39,14 +39,14 @@ class Trainer:
         self.verbosity = verbosity
         
     def train(self):           
-    
+
         self.model.compile(
             loss = {
                 'generator': SSIMLoss()
             },
             metrics=[PSNR_Metric(),SSIM_Metric()]
         )
-            
+        
         self.history = self.model.fit(
                 self.dataset['train'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
                 validation_data = self.dataset['val'].batch(self.batch_size).prefetch(tf.data.AUTOTUNE),
