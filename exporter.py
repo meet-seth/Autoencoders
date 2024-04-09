@@ -29,15 +29,15 @@ class Exporter:
         
         if self.mode=='full':
             print("Saving in full mode.")
-            self.model.export(self.save_path)
+            self.model.export(self.save_path[0])
             
         elif self.mode=='encoder-decoder':
             print("Saving in Encoder - Decoder Mode.")
-            encoder = self.model.encoder
-            decoder = self.model.decoder
+            encoder = self.model.generator.encoder
+            decoder = self.model.generator.decoder
             
-            encoder.save(self.save_path[0])
-            decoder.save(self.save_path[1])
+            encoder.export(self.save_path[0])
+            decoder.export(self.save_path[1])
             
         print("Model Saved Successfully")
         
@@ -45,6 +45,10 @@ class Exporter:
 
 
 if __name__ == "__main__":
+    
+    def list_of_strings(arg):
+        return arg.split(',')
+    
     parser = argparse.ArgumentParser()
     
     parser.add_argument(
@@ -84,6 +88,7 @@ if __name__ == "__main__":
         Pass in a file path with .h5 extension to save it in h5 format. Pass in a list 
         if type is encoder-decoder.
         """,
+        type=list_of_strings,
         required=True
     )
     
