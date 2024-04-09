@@ -21,10 +21,15 @@ class Validator:
                 log_dir=log_dir,
                 learning_rate=const.LEARNING_RATE
             )
+            self.model.compile(
+                loss = {
+                    'generator': SSIMLoss()
+                },
+                metrics=[PSNR_Metric(),SSIM_Metric()]
+            )
             if ckpt_path:
-                latest = tf.train.latest_checkpoint(ckpt_path)
-                checkpoint = tf.train.Checkpoint(self.model)
-                checkpoint.restore(latest).expect_partial()
+                latest = tf.train.latest_checkpoint(checkpoint_dir=ckpt_path)
+                self.model.load_weights(latest)
         else:
             self.model = tf.keras.models.load_model(model)
                  
@@ -36,12 +41,7 @@ class Validator:
         
     def evalulate(self):
         
-        self.model.compile(
-            loss = {
-                'generator': SSIMLoss()
-            },
-            metrics=[PSNR_Metric(),SSIM_Metric()]
-        )        
+                
         losses_dict = self.model.evaluate(
             self.dataset,
             batch_size=self.batch_size,
@@ -103,7 +103,7 @@ if __name__=='__main__':
     
     parser.add_argument(
         '--ckpt_path',
-        help='Checpoint path to load model from',
+        help='Checkpoint directory path to load model from',
         type=str,
         default=None
     )

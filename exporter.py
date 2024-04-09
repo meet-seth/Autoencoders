@@ -17,10 +17,9 @@ class Exporter:
             log_dir='./log',
             learning_rate=1e-1
         )
+        self.model.compile()
         latest = tf.train.latest_checkpoint(ckpt_path)
-        checkpoint = tf.train.Checkpoint(self.model)
-        checkpoint.restore(latest).expect_partial()
-        # self.model.compile()
+        self.model.load_weights(latest)
         self.mode = mode
         self.save_path = save_path
         

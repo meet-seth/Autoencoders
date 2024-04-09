@@ -103,52 +103,7 @@
                     }
                 ]}
             }
-        },
-
-            "discriminator": {
-                "name": "Discriminator",
-                "layers": [
-                    {
-                        "Conv2D": {
-                            "filters": 20,
-                            "kernel_size": 5,
-                            "strides": 2,
-                            "padding": "valid",
-                            "use_bias": true,
-                            "activation": "relu",
-                            "name": "discriminator_layer_1"
-                        }
-                    },
-                    {
-                        "Conv2D": {
-                            "filters": 50,
-                            "kernel_size": 5,
-                            "strides": 2,
-                            "padding": "valid",
-                            "use_bias": true,
-                            "activation": "relu",
-                            "name": "discriminator_layer_2"
-                        }
-                    },
-                    {
-                        "Flatten": {}
-                    },
-                    {
-                        "Dense": {
-                            "units": 500,
-                            "activation": "relu",
-                            "name": "discriminator_layer_4"
-                        }
-                    },
-                    {
-                        "Dense": {
-                            "units": 1,
-                            "activation": "sigmoid",
-                            "name": "discriminator_output"
-                        }
-                    }
-                ]
-            }
+        }
         }
     }
 }
