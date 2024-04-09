@@ -65,6 +65,11 @@ class Trainer:
                         save_best_only=True,
                         save_weights_only=False,
                         save_freq='epoch'
+                    ),
+                    tf.keras.callbacks.EarlyStopping(
+                        monitor='val_generator_loss',
+                        patience=4,
+                        restore_best_weights=True
                     )],
                 verbose=self.verbosity
             )
