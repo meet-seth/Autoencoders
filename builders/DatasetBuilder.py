@@ -33,9 +33,9 @@ class DatasetBuilder:
                 ds, info= tfds.load(
                     self.dataset_name_or_path,
                     split=[
-                        'train[:80%]',
-                        'train[80%:90%]',
-                        'test'
+                        'train',
+                        'test[:50%]',
+                        'test[50%:]'
                     ],
                     shuffle_files=True,
                     try_gcs=True,
@@ -52,9 +52,9 @@ class DatasetBuilder:
                 ds, info = tfds.load(
                     self.dataset_name_or_path,
                     split=[
-                        'train[:80%]',
-                        'train[80%:90%]',
-                        'train[90%:100%]'
+                        'train',
+                        'test[:50%]',
+                        'train[50%:]'
                     ],
                     with_info=True
                 )
