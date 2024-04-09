@@ -2,9 +2,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import constants.constants as const
 
-class RateLoss(tf.keras.losses.Loss):
-    def call(self,y_true,y_pred):
-        return y_pred
     
 class SSIMLoss(tf.keras.losses.Loss):
     def __init__(self,weight=const.LOSS_WEIGHT,alpha=const.ALPHA,reduction="auto", name=None):

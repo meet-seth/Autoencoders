@@ -25,7 +25,9 @@ class Trainer:
                        log_dir=log_dir,
                        learning_rate=learning_rate)
             if load_from_ckpt_path:
-                self.model.load_weigths(load_from_ckpt_path)
+                latest = tf.train.latest_checkpoint(load_from_ckpt_path)
+                checkpoint = tf.train.Checkpoint(self.model)
+                checkpoint.restore(latest).expect_partial()
         else:
             self.model = tf.keras.models.load_model(model)
             
@@ -63,6 +65,11 @@ class Trainer:
                         save_best_only=True,
                         save_weights_only=True,
                         save_freq='epoch'
+                    ),
+                    tf.keras.callbacks.EarlyStopping(
+                        monitor='val_generator_loss',
+                        patience=4,
+                        restore_best_weights=True
                     )],
                 verbose=self.verbosity
             )

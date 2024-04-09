@@ -26,21 +26,25 @@ class Inference:
                                        dataset_name_or_path=data_path,
                                        channels=self.channels,
                                        width=self.width,
-                                       height=self.height).build()
+                                       height=self.height).build().batch(4)
+            outputs = []
+            for i,data in enumerate(data_path):
+                print(f"Predicting {i}")
+                outputs.append(self.model(data))
+            outputs = tf.concat(outputs,axis=0)
         else:
             img = tf.io.read_file(data_path)
             img = tf.io.decode_jpeg(img,channels=self.channels)
             data_path = tf.image.resize(img,[self.height,self.width])
-            
-        
-        training = not post_process
-        outputs = self.model(data_path,training=training)
+    
+            outputs = [self.model(data_path)]
         
         if self.save_dir is not None:
             
             for i in outputs:
+                print(f"Saving {self.counter}")
                 tf.keras.utils.save_img(
-                    f'{self.save_dir}/{self.counter}.jpg',
+                    f'{self.save_dir}/{self.counter}.png',
                     i.numpy(),
                     data_format='channels_last',
                     scale=True,
@@ -62,10 +66,15 @@ if __name__=='__main__':
     )
     
     parser.add_argument(
-        '--ckpt_path',
-        help="Path to saved model checkpoints",
-        type=str,
-        default=None
+        "--path_to_data",
+        help="Can be a directory of images or an image file.",
+        required=True
+    )
+    
+    parser.add_argument(
+        "--postprocess",
+        help="Wheather to post_process data to clip its values between 0 and 1. Default true",
+        default=True
     )
     
     parser.add_argument(
@@ -98,7 +107,14 @@ if __name__=='__main__':
     
     args = parser.parse_args()
     
+    function_parser = {}
+    function_parser["data_path"] = vars(args).pop("path_to_data")
+    function_parser["post_process"] = vars(args).pop("postprocess")
+    
     inferer = Inference(**vars(args))
+    inferer.infer(**function_parser)
+    
+    
     
     
     
