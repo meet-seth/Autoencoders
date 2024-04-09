@@ -13,6 +13,13 @@ class ModelBuilder:
         with open(model_path,'r') as f:
             self.model_config = json.load(f)
             f.close()
+            
+    def build_for_exported(self,latent_dims):
+        self.latent_dims = latent_dims
+        model_conf = self.build_model_from_json(self.model_config)
+        inputs,outputs,generator = self.generate_outputs(model_conf)
+        print(generator.summary())
+        return generator
         
     def build(self,latent_dims,log_dir,learning_rate):
         """

@@ -24,7 +24,7 @@ class DatasetBuilder:
     def directory_mapper(self,path):
         img = tf.io.read_file(path)
         img = tf.io.decode_jpeg(img,channels=self.channels)
-        return tf.image.resize(img,[self.height,self.width])
+        return tf.cast(tf.image.resize(img,[self.height,self.width]),tf.uint8)
         
     def build(self):
         if self.is_tfds:
@@ -33,9 +33,9 @@ class DatasetBuilder:
                 ds, info= tfds.load(
                     self.dataset_name_or_path,
                     split=[
-                        'train[:80%]',
-                        'train[80%:90%]',
-                        'test'
+                        'train',
+                        'test[:50%]',
+                        'test[50%:]'
                     ],
                     shuffle_files=True,
                     try_gcs=True,

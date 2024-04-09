@@ -61,7 +61,7 @@ if __name__=='__main__':
     
     parser.add_argument(
         "--model",
-        help="tf keras saved model directory path OR checkpoint path.",
+        help="json model config file",
         type=str,
         required=True
     )
