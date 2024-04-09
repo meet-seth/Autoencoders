@@ -1,15 +1,14 @@
 import tensorflow as tf
-import constants as const
 class ImageCompressor(tf.keras.Model):
-    def __init__(self,inputs,outputs,generator,log_dir,*args, **kwargs):
+    def __init__(self,inputs,outputs,generator,log_dir,metrics,learning_rate,*args, **kwargs):
         super().__init__(*args,inputs=inputs,outputs=outputs,**kwargs)
+        self.custom_metrics = metrics
         self.tf_writer = tf.summary.create_file_writer(log_dir)
         self.generator = generator
-        self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=const.LEARNING_RATE)
+        self.generator_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
            
     def call(self,x,training):
-        
         regenerated_output = self.generator(x,training=training)
         
         if not training:
@@ -44,19 +43,26 @@ class ImageCompressor(tf.keras.Model):
         
         
         self.generator_optimizer.apply_gradients(zip(generator_gradients,self.generator.trainable_variables))
+
         
         for metric in self.metrics:
-            metric.update_state(loss[metric.name])
-        
-        return {"generator_loss": loss['generator_loss']}
+            metric.update_state(true_tensor['generator'],predictions['generator'])
+     
+        mtr = {m.name: m.result() for m in self.metrics}
+        mtr['generator_loss'] = loss['generator_loss']
+       
+        return mtr
+    
+    @property
+    def metrics(self):
+        return self.custom_metrics
         
     @tf.function
     def test_step(self,x):
         
         
         
-        predictions = self(x,training=False)
-        predictions['generator'] = self._post_process(predictions['generator'])
+        predictions = self(x,training=True)
         true_tensor = {
                 "generator": tf.cast(x,self.compute_dtype) / 255.                    
             }
@@ -67,18 +73,16 @@ class ImageCompressor(tf.keras.Model):
             tf.summary.scalar("generator",loss['generator_loss'])
             tf.summary.image("original",x)
             tf.summary.image("regenerated",tf.cast(predictions['generator']*255.,tf.uint8))
+
         
         for metric in self.metrics:
-            if metric.name in ['SSIM','PSNR']:
-                metric.update_state(true_tensor['generator'],predictions['generator'])
-            else:
-                metric.update_state(loss[metric.name])
+            metric.update_state(true_tensor['generator'],predictions['generator'])
+            
+        mtr = {m.name: m.result() for m in self.metrics}
+        mtr['generator_loss'] = loss['generator_loss']
         
-        return {
-            "generator_loss": loss['generator_loss']
-        }
-        
-        
+        return mtr
+    
     
 class Generator(tf.keras.Model):
     def __init__(self,config, input_shape, *args, **kwargs):
@@ -116,11 +120,17 @@ class Encoder(tf.keras.Model):
         y = self.model(x)
         
         return y
+    
+class ClipplingLayer(tf.keras.layers.Layer):
+    
+    def call(self,inputs):
+        return tf.clip_by_value(inputs,clip_value_min=0.,clip_value_max=1.)
         
 class Decoder(tf.keras.Model):
     def __init__(self, sequential_model,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = sequential_model
+        self.model.add(ClipplingLayer())
         self._name = self.model._name
             
     def call(self,x):
