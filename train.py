@@ -63,7 +63,7 @@ class Trainer:
                         monitor='val_generator_loss',
                         mode='min',
                         save_best_only=True,
-                        save_weights_only=False,
+                        save_weights_only=True,
                         save_freq='epoch'
                     ),
                     tf.keras.callbacks.EarlyStopping(
