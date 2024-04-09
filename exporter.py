@@ -29,7 +29,7 @@ class Exporter:
         
         if self.mode=='full':
             print("Saving in full mode.")
-            self.model.save(self.save_path)
+            self.model.export(self.save_path)
             
         elif self.mode=='encoder-decoder':
             print("Saving in Encoder - Decoder Mode.")

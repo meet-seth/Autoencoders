@@ -3,4 +3,4 @@ python3 exporter.py \
 --mode=full \
 --ckpt_path=checkpoints/checkpoints/ \
 --latent_dims=50 \
---save_path=exported_models/ImageCompressor_1.keras
+--save_path=exported_models/ImageCompressor_2
