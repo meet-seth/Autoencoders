@@ -76,7 +76,7 @@ class ImageCompressor(tf.keras.Model):
         
         return mtr
     
-@tf.keras.saving.register_keras_serializable(package="Models",name="Generator")
+# @tf.keras.saving.register_keras_serializable(package="Models",name="Generator")
 class Generator(tf.keras.Model):
     def __init__(self,config, pr_input_shape, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,25 +95,25 @@ class Generator(tf.keras.Model):
         
         return regenerated_output
     
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                'config': self.config,
-                'pr_input_shape': self.pr_input_shape
-            }
-        )
-        return config
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update(
+    #         {
+    #             'config': self.config,
+    #             'pr_input_shape': self.pr_input_shape
+    #         }
+    #     )
+    #     return config
     
-    @classmethod
-    def from_config(cls, config, custom_objects=None):
-        config["config"] = tf.keras.saving.deserialize_keras_object(config["config"])
-        config["pr_input_shape"] = tf.keras.saving.deserialize_keras_object(config['pr_input_shape'])
+    # @classmethod
+    # def from_config(cls, config, custom_objects=None):
+    #     config["config"] = tf.keras.saving.deserialize_keras_object(config["config"])
+    #     config["pr_input_shape"] = tf.keras.saving.deserialize_keras_object(config['pr_input_shape'])
         
-        return cls(**config)
+    #     return cls(**config)
         
                 
-@tf.keras.saving.register_keras_serializable(package="Modles",name='Encoder')
+# @tf.keras.saving.register_keras_serializable(package="Modles",name='Encoder')
 class Encoder(tf.keras.Model):
     def __init__(self, sequential_model,pr_input_shape,*args,**kwargs):
         super().__init__(*args, **kwargs)
@@ -132,24 +132,24 @@ class Encoder(tf.keras.Model):
         
         return y
     
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                'sequential_model': self.model,
-                'pr_input_shape': self.reshaping
-            }
-        )
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update(
+    #         {
+    #             'sequential_model': self.model,
+    #             'pr_input_shape': self.reshaping
+    #         }
+    #     )
         
-        return config
+    #     return config
     
-    @classmethod
-    def from_config(cls, config, custom_objects=None):
-        config['sequential_model'] = tf.keras.saving.deserialize_keras_object(config['sequential_model'])
-        config['pr_input_shape'] = tf.keras.saving.deserialize_keras_object(config['pr_input_shape'])
+    # @classmethod
+    # def from_config(cls, config, custom_objects=None):
+    #     config['sequential_model'] = tf.keras.saving.deserialize_keras_object(config['sequential_model'])
+    #     config['pr_input_shape'] = tf.keras.saving.deserialize_keras_object(config['pr_input_shape'])
         
-        return cls(**config)
-@tf.keras.saving.register_keras_serializable(package="Layers",name="Clipping")
+    #     return cls(**config)
+# @tf.keras.saving.register_keras_serializable(package="Layers",name="Clipping")
 class ClipplingLayer(tf.keras.layers.Layer):
     def __init__(self,*args,**kwargs):
         super().__init__()
@@ -157,15 +157,15 @@ class ClipplingLayer(tf.keras.layers.Layer):
     def call(self,inputs):
         return tf.clip_by_value(inputs,clip_value_min=0.,clip_value_max=1.)
     
-    def get_config(self):
-        return super().get_config()
+    # def get_config(self):
+    #     return super().get_config()
     
-    @classmethod
-    def from_config(cls, config):
-        return super().from_config(config)
+    # @classmethod
+    # def from_config(cls, config):
+    #     return super().from_config(config)
         
         
-@tf.keras.saving.register_keras_serializable(package="Models",name='Decoder')
+# @tf.keras.saving.register_keras_serializable(package="Models",name='Decoder')
 class Decoder(tf.keras.Model):
     def __init__(self, sequential_model,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -178,19 +178,19 @@ class Decoder(tf.keras.Model):
         
         return decoder_output
     
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "sequential_model": self.model
-            }
-        )
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update(
+    #         {
+    #             "sequential_model": self.model
+    #         }
+    #     )
         
-        return config
+    #     return config
     
-    @classmethod
-    def from_config(cls, config, custom_objects=None):
-        config['sequential_model'] = tf.keras.saving.deserialize_keras_object(config['sequential_model'])
+    # @classmethod
+    # def from_config(cls, config, custom_objects=None):
+    #     config['sequential_model'] = tf.keras.saving.deserialize_keras_object(config['sequential_model'])
         
-        return cls(**config)
+    #     return cls(**config)
     
