@@ -1,11 +1,8 @@
-#import torch.nn as nn
 import cv2
 import tensorflow as tf
 import numpy as np
 from tkinter import *
-from PIL import Image,ImageDraw,ImageTk
-import matplotlib.pyplot as plt
-from io import BytesIO
+from PIL import Image,ImageDraw
 
 
 def model(x):
@@ -46,14 +43,13 @@ def draw_lines(event):
 def Recognise_Digit():
     global new_img
     img = np.array(new_img,dtype=np.uint8)
-    interpolation = cv2.INTER_NEAREST
-    img = cv2.resize(img,(28,28),interpolation)
-    regen = model(np.reshape(img,(1,28,28,1))).astype(np.uint8)
+    # scaled_img = np.lib.stride_tricks.sliding_window_view(img,(10,10))[::10,::10,:,:].max(axis=(-1,-2))
+    scaled_img = cv2.resize(img,(28,28),interpolation=cv2.INTER_AREA)
+    regen = model(np.reshape(scaled_img,(1,28,28,1))).astype(np.uint8)
     scale = 10
-    img = img.repeat(scale,axis=1).repeat(scale,axis=0)
+    scaled_img = scaled_img.repeat(scale,axis=1).repeat(scale,axis=0)
     regen = regen.repeat(scale,axis=1).repeat(scale,axis=0)
-    # img = cv2.resize(img,(212,212),cv2.INTER_LINEAR)
-    cv2.imshow("Image",img)
+    cv2.imshow("Image",scaled_img)
     cv2.imshow("rege",regen)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
