@@ -1,6 +1,6 @@
 python3 exporter.py \
 --model=models/model.json \
---mode=full \
+--mode=encoder-decoder \
 --ckpt_path=checkpoints/checkpoints/ \
 --latent_dims=50 \
---save_path=exported_models/ImageCompressor_2
+--save_path=exported_models/encoder,exported_models/decoder
