@@ -6,7 +6,8 @@ The aim of this repository is to create a training pipeline for the use of **Aut
 
 The experiments has been done on **MNIST** Dataset and all the result metrics, model graphs, etc. are with respect to the same although support has been provided for a few of datasets available on `tensorflow-datasets` along with the use of *custom dataset*. 
 
-[!TIP]The entire pipeline is developed in `tensorflow==2.14.1`. Therefore, for best results, it is preferrable to use `tensorflow==2.14.1`.
+> [!TIP]
+> The entire pipeline is developed in `tensorflow==2.14.1`. Therefore, for best results, it is preferrable to use `tensorflow==2.14.1`.
 
 Please feel free to use this code and modify it according to your own needs and don't forget to cite this repo. :grinning:
 
@@ -92,10 +93,8 @@ The following are example regenerated images :
 The left column of images are input or real images while the right columns are the output or regenerated images by the decoder.
 
 ## Usage
-
-First of all, to use the pipeline, we need to create a model.json file which would contain the architecture of the model. Take a look at [model.json](/models/model.json) for referrence.
-
-> [!NOTE] 
+> [!IMPORTANT]
+> First of all, to use the pipeline, we need to create a model.json file which would contain the architecture of the model. Take a look at [model.json](/models/model.json) for referrence.
 > Do provide all the arguments neccessary for the Layer to be built required by tensorflow. Refer [tensorflow docs](https://www.tensorflow.org/api_docs/python/tf/keras/layers) on what arguments are neccessary for a layer.
 
 After creating the model.json file, we can perform training, validation and inference easily. Stick to the end for there is a fun GUI which demonstrates the working of the model.
@@ -107,28 +106,34 @@ To perform training we need to run [train.py](/train.py). The following are the 
 | Arguments | Usage |
 | --- | --- |
 |`--model` | This is the path to model.json file we just created. Look at [ModelBuilder.py](/builders/ModelBuilder.py) to see how a model is generated from json file. |
-| `--tfds` | This argument is to specify if the dataset is available on tensorflow datasets. For now only a few datasets are supported by the code due to different split ratios and different preprocessing required for each, but it is very easy to add support for new datasets. Look at [DatasetBuilder.py](/builders/DatasetBuilder.py) on how it works.[^TPU_USAGE] |
+| `--tfds` | This argument is to specify if the dataset is available on tensorflow datasets. For now only a few datasets are supported by the code due to different split ratios and different preprocessing required for each, but it is very easy to add support for new datasets. Look at [DatasetBuilder.py](/builders/DatasetBuilder.py) on how it works. |
 | `--dataset` | Name of the dataset if `--tfds` is set to `True` otherwise pass in the path of images to your custom dataset directory. See [DatasetBuilder.py](/builders/DatasetBuilder.py) to see how custom dataset directory path is treated. |
 | `--log_dir` | Tensorboard is used to log information during training and validation. To pass in a specific directory to store the logs, use this argument. Otherwise the logs will be stored by default to `./log/tensorboard/`. See [constants.py](/constants/constants.py) for more details on default paramerters. |
 | `--batch_size` | Batch Size Argument to train the model with. Default is set to 32 |
-| --learning_rate | Learning rate argument for the optimizer (here Adam). Deafult is set to 1e-3 |
+| `--learning_rate` | Learning rate argument for the optimizer (here Adam). Deafult is set to 1e-3 |
 | `--latent_dims` | The size of the latent compressed dimensions. This is the size of `compressed_representation_layer` in Model Architecture. Refer the above image on Model Architecture. Default is set to 50 |
 | `--epochs` | Number of epochs to run training loop for. Default is set to 15. |
 | `--load_from_ckpt_path` | In case you are continuing training or doing transfer learning, pass in the path of model checkpoints to load weights from the checkpoint. Please note that model.json file is still required to build the model. Defaults to `None` |
 | `--checkpoint_filepath` | Path to save model checkpoints while training. This is a path passed to `tf.keras.callbacks.Checkpoint()`. Default is set to `./checkpoints/model.ckpt` |
 | `--verbosity` | One of 0,1,2 where 0 - silent, 1 - progress bar, 2 - one line per epoch. |
 
-
-
-
-
-
-
-
-
-
-
-
+I have implemented a [`trainer.sh`](/trainer.sh) shell script to run the above file. It is created for running the python file easily. 
 
 > [!NOTE]
-> [^TPU_USAGE]: TPU is not supported by the code at this moment. But if someone if using TPU, do modify the code in [DatasetBuilder.py](/builders/DatasetBuilder.py) in build, to load tfds dataset with `try_gcs=True` if the dataset is available in `tfds`.
+> TPU is not supported by the code at this moment. But if someone if using TPU, do modify the code in [DatasetBuilder.py](/builders/DatasetBuilder.py) in build, to load tfds dataset with `try_gcs=True` if the dataset is available in `tfds`.
+
+### Validation
+
+To perform validation we need to run [validation.py](/validation.py). The following are the arguments:
+
+| Arguments | Usage |
+| --- | --- |
+|`--model` | This is the path to model.json file we just created. Look at [ModelBuilder.py](/builders/ModelBuilder.py) to see how a model is generated from json file. |
+| `--tfds` | This argument is to specify if the dataset is available on tensorflow datasets. For now only a few datasets are supported by the code due to different split ratios and different preprocessing required for each, but it is very easy to add support for new datasets. Look at [DatasetBuilder.py](/builders/DatasetBuilder.py) on how it works. |
+| `--dataset` | Name of the dataset if `--tfds` is set to `True` otherwise pass in the path of images to your custom dataset directory. See [DatasetBuilder.py](/builders/DatasetBuilder.py) to see how custom dataset directory path is treated. |
+| `--log_dir` | Tensorboard is used to log information during training and validation. To pass in a specific directory to store the logs, use this argument. Otherwise the logs will be stored by default to `./log/tensorboard/`. See [constants.py](/constants/constants.py) for more details on default paramerters. |
+| `--batch_size` | Batch Size Argument to train the model with. Default is set to 32 |
+| `--latent_dims` | The size of the latent compressed dimensions. This is the size of `compressed_representation_layer` in Model Architecture. Refer the above image on Model Architecture. Default is set to 50. This is a required argument to be passed in again to build the model. |
+| `--ckpt_path` | The file path saved checkpoints to load the weights in the built model. |
+
+I have implemented a [`validator.sh`](/validator.sh) shell script to run the above file. It is created for running the python file easily.
