@@ -24,7 +24,7 @@ Loss Function used for our approach is a combination of SSIM loss and L1 loss or
 Formula for SSIM is given by:
 
 $$
- SSIM(x,y) = \mu
+ SSIM(x,y) = (2*{\mu}_x*{\mu}_y + c_1)*(2*{\sigma}_{xy} + c_2) / ({\mu}^2_x + {\mu}^2_y + c_1)*({\sigma}^2_x + {\sigma}^2_y + c_2)
 $$
 
 with:
