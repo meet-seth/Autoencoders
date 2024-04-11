@@ -84,8 +84,9 @@ To modify or add new metrics, checkout the file [MetricsArchitecture.py](/archit
 ## Results
 
 The following graphs show the performance of our ImageCompressor model on MNIST dataset:
-![EPOCHS_VS_SSIM](/imgs_github/eopchs_vs_ssim.png) 
-![EPOCHS_VS_PSNR](/imgs_github/eopchs_vs_psnr.png) 
-![EPOCHS_VS_LOSS](/imgs_github/epochs_vs_loss.png)
+![EPOCHS_VS_SSIM](/imgs_github/eopchs_vs_ssim.png) ![EPOCHS_VS_PSNR](/imgs_github/eopchs_vs_psnr.png) ![EPOCHS_VS_LOSS](/imgs_github/epochs_vs_loss.png)
 
+The following are example regenerated images :
+![Example](/imgs_github/regen_images.png)
 
+The left column of images are input or real images while the right columns are the output or regenerated images by the decoder.
